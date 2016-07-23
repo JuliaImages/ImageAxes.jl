@@ -8,3 +8,5 @@ This small package supports the representation of images as
 [AxisArrays](https://github.com/mbauman/AxisArrays.jl) to endow the
 axes with "meaning," and makes programming with such arrays easy via
 [traits](https://github.com/andyferris/Traitor.jl).
+
+There will be fancy documentation eventually, but for now your best bet is to [read them on GitHub](docs/build/index.md).
