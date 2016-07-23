@@ -156,6 +156,9 @@ which specifies that `x` and `y` have spacing of 1mm and `z` has a spacing of 3m
 ## Temporal axes
 
 
+(NOTE: portions of this don't work yet, but it illustrates what I'm aiming for.)
+
+
 You can declare that an axis corresponds to time like this:
 
 
@@ -188,8 +191,8 @@ AxisArrays.Axis{:time,SIUnits.SIRange{FloatRange{Float64},Float64,0,0,1,0,0,0,0,
 and index it like
 
 
-```@example 2
-img[ax[3]]
+```julia
+# img[ax[3]]
 ```
 
 
@@ -199,9 +202,9 @@ Note that this requires that you've attached unique physical units to the time d
 You can also specialize methods like this:
 
 
-```@example
+```julia
 nimages(img) = 1
-@traitor nimages(img::AxisArray::HasTimeAxis) = length(timeaxis(img))
+# @traitor nimages(img::AxisArray::HasTimeAxis) = length(timeaxis(img))
 ```
 
 
@@ -210,15 +213,15 @@ where the pre-defined `HasTimeAxis` trait will restrict that method to arrays th
 
 ```julia
 meanintensity(img) = mean(img)
-@traitor function meanintensity(img::AxisArray::HasTimeAxis)
-    ax = timeaxis(img)
-    n = length(x)
-    intensity = zeros(eltype(img), n)
-    for ti = 1:n
-        sl = img[ax[ti]]  # the image slice at time ax[ti]
-        intensity[ti] = mean(sl)
-    end
-    intensity
-end
+# @traitor function meanintensity(img::AxisArray::HasTimeAxis)
+#     ax = timeaxis(img)
+#     n = length(x)
+#     intensity = zeros(eltype(img), n)
+#     for ti = 1:n
+#         sl = img[ax[ti]]  # the image slice at time ax[ti]
+#         intensity[ti] = mean(sl)
+#     end
+#     intensity
+# end
 ```
 

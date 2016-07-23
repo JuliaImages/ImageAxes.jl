@@ -53,6 +53,8 @@ spacing of 3mm, as well as the location of the center of each voxel.
 
 ## Temporal axes
 
+(NOTE: portions of this don't work yet, but it illustrates what I'm aiming for.)
+
 You can declare that an axis corresponds to time like this:
 
 ```@example 2
@@ -79,10 +81,10 @@ img = AxisArray(reshape(1:9*300, (3,3,300)),
 ax = timeaxis(img)
 ```
 
-and index it like (NOTE: the rest of this illustrates what we're aiming for, and doesn't work yet)
+and index it like
 
 ```@example 2
-img[ax[3]]
+# img[ax[3]]
 ```
 
 Note that this requires that you've attached unique physical units to the time dimension.  Multiple time axes with different names in the same array are not supported.
@@ -91,7 +93,7 @@ You can also specialize methods like this:
 
 ```@example
 nimages(img) = 1
-@traitor nimages(img::AxisArray::HasTimeAxis) = length(timeaxis(img))
+# @traitor nimages(img::AxisArray::HasTimeAxis) = length(timeaxis(img))
 ```
 
 where the pre-defined `HasTimeAxis` trait will restrict that method to
@@ -99,14 +101,14 @@ arrays that have a timeaxis. This makes it easy to write methods like this:
 
 ```julia
 meanintensity(img) = mean(img)
-@traitor function meanintensity(img::AxisArray::HasTimeAxis)
-    ax = timeaxis(img)
-    n = length(x)
-    intensity = zeros(eltype(img), n)
-    for ti = 1:n
-        sl = img[ax[ti]]  # the image slice at time ax[ti]
-        intensity[ti] = mean(sl)
-    end
-    intensity
-end
+# @traitor function meanintensity(img::AxisArray::HasTimeAxis)
+#     ax = timeaxis(img)
+#     n = length(x)
+#     intensity = zeros(eltype(img), n)
+#     for ti = 1:n
+#         sl = img[ax[ti]]  # the image slice at time ax[ti]
+#         intensity[ti] = mean(sl)
+#     end
+#     intensity
+# end
 ```
