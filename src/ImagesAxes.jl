@@ -1,4 +1,4 @@
-module ImagesAxisArrays
+module ImagesAxes
 
 # package code goes here
 

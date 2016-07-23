@@ -1,4 +1,4 @@
-using ImagesAxisArrays
+using ImagesAxes
 using Base.Test
 
 # write your own tests here
