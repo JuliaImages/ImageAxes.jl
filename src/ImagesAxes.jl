@@ -1,30 +1,12 @@
 module ImagesAxes
 
-using Reexport
+using Reexport, SimpleTraits
 
 @reexport using AxisArrays
 
-export @timeaxis, timeaxis
-# export HasTimeAxis   # once traits are working
+export @timeaxis, timeaxis, TimeAxis, HasTimeAxis
 
-abstract AxisType
-immutable TimeAxis <: AxisType end
-immutable SpaceAxis <: AxisType end
-
-# By default, axes are spatial
-AxisType{T<:Axis}(::Type{T}) = SpaceAxis()
-
-macro timeaxis(T)
-    :(AxisType{T<:$T}(::Type{T}) = TimeAxis())
-end
-
-"""
-    @timeaxis Axis{:axname}
-
-declares that any `Axis` with name `:axname` is a temporal axis. This
-declaration must be made before you call functions on such arrays.
-"""
-:@timeaxis
+@traitdef TimeAxis{X}
 
 """
     timeaxis(A)
@@ -32,20 +14,22 @@ declaration must be made before you call functions on such arrays.
 returns the time axis, if present, of the array `A`, and `nothing` otherwise.
 """
 @inline timeaxis(A::AxisArray) = _timeaxis(A.axes...)
-# Hope for a prettier implementation using Traitor (this doesn't work yet):
-# @traitor _timeaxis(ax::Axis, axes...) = _timeaxis(axes...)
-# @traitor _timeaxis(ax::Axis::TimeAxis, axes...) = ax
-@inline _timeaxis(ax, axes...) = __timeaxis((ax, AxisType(typeof(ax))), axes...)
-@inline __timeaxis(ax_trait::Tuple{Axis,TimeAxis}, axes...) = ax_trait[1]
-@inline __timeaxis(ax_trait,                       axes...) = _timeaxis(axes...)
+@traitfn _timeaxis{Ax<:Axis; !TimeAxis{Ax}}(ax::Ax, axes...) = _timeaxis(axes...)
+@traitfn _timeaxis{Ax<:Axis;  TimeAxis{Ax}}(ax::Ax, axes...) = ax
 _timeaxis() = nothing
 
-# Once traits are working
-# abstract AbstractHasTimeAxis
-# immutable HasTimeAxis <: AbstractHasTimeAxis end
 
-# Base.@pure function AbstractHasTimeAxis{T,N,D,Ax}(::Type{AxisArray{T,N,D,Ax}})
-#     any(S->isa(AxisType(S), TimeAxis), Ax.parameters) ? HasTimeAxis : Void
-# end
+@traitfn istimeaxis{Ax<:Axis; !TimeAxis{Ax}}(::Type{Ax}) = false
+@traitfn istimeaxis{Ax<:Axis;  TimeAxis{Ax}}(::Type{Ax}) = true
+
+@traitdef HasTimeAxis{X}
+
+axtype{T,N,D,Ax}(::Type{AxisArray{T,N,D,Ax}}) = Ax
+axtype(A::AxisArray) = axtype(typeof(A))
+
+Base.@pure function SimpleTraits.trait{AA<:AxisArray}(t::Type{HasTimeAxis{AA}})
+    axscan = map(S->istimeaxis(S), axtype(AA).parameters)
+    any(axscan) ? HasTimeAxis{AA} : Not{HasTimeAxis{AA}}
+end
 
 end # module

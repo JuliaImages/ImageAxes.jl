@@ -7,7 +7,7 @@
 While images can often be represented as plain `Array`s, sometimes additional information about the "meaning" of each axis of the array is needed.  For example, in a 3-dimensional MRI scan, the voxels may not have the same spacing along the z-axis that they do along the x- and y-axes, and this fact should be accounted for during the display and/or analysis of such images.  Likewise, a movie has two spatial axes and one temporal axis; this fact may be relevant for how one performs image processing.
 
 
-This package combines features from [AxisArrays](https://github.com/mbauman/AxisArrays.jl) and [Traitor](https://github.com/andyferris/Traitor.jl) to provide a convenient representation and programming paradigm for dealing with such images.
+This package combines features from [AxisArrays](https://github.com/mbauman/AxisArrays.jl) and [SimpleTraits](https://github.com/mauro3/SimpleTraits.jl) to provide a convenient representation and programming paradigm for dealing with such images.
 
 
 <a id='Installation-1'></a>
@@ -163,8 +163,8 @@ You can declare that an axis corresponds to time like this:
 
 
 ```julia
-using ImagesAxes
-@timeaxis Axis{:time}
+using ImagesAxes, SimpleTraits
+@traitimpl TimeAxis{Axis{:time}}
 ```
 
 
@@ -203,25 +203,34 @@ You can also specialize methods like this:
 
 
 ```julia
-nimages(img) = 1
-# @traitor nimages(img::AxisArray::HasTimeAxis) = length(timeaxis(img))
+using ImagesAxes, SimpleTraits
+@traitfn nimages{AA<:AxisArray;  HasTimeAxis{AA}}(img::AA) = length(timeaxis(img))
+@traitfn nimages{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = 1
+```
+
+```
+nimages (generic function with 3 methods)
 ```
 
 
-where the pre-defined `HasTimeAxis` trait will restrict that method to arrays that have a timeaxis. This makes it easy to write methods like this:
+where the pre-defined `HasTimeAxis` trait will restrict that method to arrays that have a timeaxis. A more complex example is
 
 
 ```julia
-meanintensity(img) = mean(img)
-# @traitor function meanintensity(img::AxisArray::HasTimeAxis)
-#     ax = timeaxis(img)
-#     n = length(x)
-#     intensity = zeros(eltype(img), n)
-#     for ti = 1:n
-#         sl = img[ax[ti]]  # the image slice at time ax[ti]
-#         intensity[ti] = mean(sl)
-#     end
-#     intensity
-# end
+using ImagesAxes, SimpleTraits
+@traitfn meanintensity{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = mean(img)
+@traitfn function meanintensity{AA<:AxisArray; HasTimeAxis{AA}}(img::AA)
+    ax = timeaxis(img)
+    n = length(x)
+    intensity = zeros(eltype(img), n)
+    for ti = 1:n
+        sl = img[ax[ti]]  # the image slice at time ax[ti]
+        intensity[ti] = mean(sl)
+    end
+    intensity
+end
 ```
+
+
+and it will return the mean intensity at each timeslice, when appropriate.
 
