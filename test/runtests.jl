@@ -2,8 +2,8 @@ using ImagesAxes, SIUnits.ShortUnits, Base.Test
 
 @timeaxis Axis{:time}
 
-# using Traitor
-# has_time_axis(A) = false
+# using Traitor   # this one can be made to work now
+# @traitor has_time_axis(A::AxisArray) = false
 # @traitor has_time_axis(A::AxisArray::HasTimeAxis) = true
 has_time_axis(A) = _has_time_axis(timeaxis(A), A)
 _has_time_axis(::Void, ::Any) = false
