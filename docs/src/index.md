@@ -11,7 +11,7 @@ performs image processing.
 
 This package combines features from
 [AxisArrays](https://github.com/mbauman/AxisArrays.jl) and
-[Traitor](https://github.com/andyferris/Traitor.jl) to provide a
+[SimpleTraits](https://github.com/mauro3/SimpleTraits.jl) to provide a
 convenient representation and programming paradigm for dealing with
 such images.
 
@@ -58,8 +58,8 @@ spacing of 3mm, as well as the location of the center of each voxel.
 You can declare that an axis corresponds to time like this:
 
 ```@example 2
-using ImagesAxes
-@timeaxis Axis{:time}
+using ImagesAxes, SimpleTraits
+@traitimpl TimeAxis{Axis{:time}}
 ```
 
 Henceforth any array possessing an axis `Axis{:time}` will be
@@ -92,23 +92,27 @@ Note that this requires that you've attached unique physical units to the time d
 You can also specialize methods like this:
 
 ```@example
-nimages(img) = 1
-# @traitor nimages(img::AxisArray::HasTimeAxis) = length(timeaxis(img))
+using ImagesAxes, SimpleTraits
+@traitfn nimages{AA<:AxisArray;  HasTimeAxis{AA}}(img::AA) = length(timeaxis(img))
+@traitfn nimages{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = 1
 ```
 
 where the pre-defined `HasTimeAxis` trait will restrict that method to
-arrays that have a timeaxis. This makes it easy to write methods like this:
+arrays that have a timeaxis. A more complex example is
 
 ```julia
-meanintensity(img) = mean(img)
-# @traitor function meanintensity(img::AxisArray::HasTimeAxis)
-#     ax = timeaxis(img)
-#     n = length(x)
-#     intensity = zeros(eltype(img), n)
-#     for ti = 1:n
-#         sl = img[ax[ti]]  # the image slice at time ax[ti]
-#         intensity[ti] = mean(sl)
-#     end
-#     intensity
-# end
+using ImagesAxes, SimpleTraits
+@traitfn meanintensity{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = mean(img)
+@traitfn function meanintensity{AA<:AxisArray; HasTimeAxis{AA}}(img::AA)
+    ax = timeaxis(img)
+    n = length(x)
+    intensity = zeros(eltype(img), n)
+    for ti = 1:n
+        sl = img[ax[ti]]  # the image slice at time ax[ti]
+        intensity[ti] = mean(sl)
+    end
+    intensity
+end
 ```
+
+and it will return the mean intensity at each timeslice, when appropriate.

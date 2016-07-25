@@ -1,13 +1,11 @@
 using ImagesAxes, SIUnits.ShortUnits, Base.Test
+using SimpleTraits
 
-@timeaxis Axis{:time}
+@traitimpl TimeAxis{Axis{:time}}
 
-# using Traitor   # this one can be made to work now
-# @traitor has_time_axis(A::AxisArray) = false
-# @traitor has_time_axis(A::AxisArray::HasTimeAxis) = true
-has_time_axis(A) = _has_time_axis(timeaxis(A), A)
-_has_time_axis(::Void, ::Any) = false
-_has_time_axis(::Axis, ::Any) = true
+@traitfn has_time_axis{AA<:AxisArray;  HasTimeAxis{AA}}(::AA) = true
+@traitfn has_time_axis{AA<:AxisArray; !HasTimeAxis{AA}}(::AA) = false
+# has_time_axis{AA<:AxisArray}(::AA) = false
 
 A = AxisArray(reshape(1:12, 3, 4), Axis{:x}(1:3), Axis{:y}(1:4))
 @test timeaxis(A) == nothing
