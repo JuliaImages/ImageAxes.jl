@@ -14,3 +14,5 @@ axt = Axis{:time}(1s:1s:4s)
 A = AxisArray(reshape(1:12, 3, 4), Axis{:x}(1:3), axt)
 @test timeaxis(A) === axt
 @test has_time_axis(A) == true
+
+@test isempty(detect_ambiguities(ImagesAxes,ImagesCore,Base,Core))
