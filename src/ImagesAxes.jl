@@ -1,8 +1,20 @@
 module ImagesAxes
 
-using ImagesCore, Reexport, SimpleTraits
+using Reexport, Colors, SimpleTraits
 
 @reexport using AxisArrays
+
+function Base.convert{C<:Colorant,n}(::Type{Array{C,n}},
+                                     img::AxisArray{C,n})
+    copy!(Array{ccolor(Cdest, Csrc)}(size(img)), img)
+end
+function Base.convert{Cdest<:Colorant,n,Csrc<:Colorant}(::Type{Array{Cdest,n}},
+                                                        img::AxisArray{Csrc,n})
+    copy!(Array{ccolor(Cdest, Csrc)}(size(img)), img)
+end
+
+using ImagesCore  # This has to come after the convert definition (see julia #17648)
+
 
 export @timeaxis, timeaxis, TimeAxis, HasTimeAxis
 export timedim
