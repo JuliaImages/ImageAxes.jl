@@ -1,3 +1,6 @@
 julia 0.5-
-Reexport
+ImagesCore
 AxisArrays
+SimpleTraits
+Reexport
+Colors

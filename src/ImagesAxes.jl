@@ -13,7 +13,7 @@ function Base.convert{Cdest<:Colorant,n,Csrc<:Colorant}(::Type{Array{Cdest,n}},
     copy!(Array{ccolor(Cdest, Csrc)}(size(img)), img)
 end
 
-using ImagesCore  # This has to come after the convert definition (see julia #17648)
+@reexport using ImagesCore  # This has to come after the convert definitions (see julia #17648)
 
 
 export @timeaxis, timeaxis, TimeAxis, HasTimeAxis
