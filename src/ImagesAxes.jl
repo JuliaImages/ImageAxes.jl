@@ -1,5 +1,9 @@
+# Currently we can't do this because of julia #17648
+# __precompile__()
+
 module ImagesAxes
 
+using Base: @pure, tail
 using Reexport, Colors, SimpleTraits
 
 @reexport using AxisArrays
@@ -16,7 +20,7 @@ end
 @reexport using ImagesCore  # This has to come after the convert definitions (see julia #17648)
 
 
-export @timeaxis, timeaxis, TimeAxis, HasTimeAxis
+export @timeaxis, timeaxis, istimeaxis, TimeAxis, HasTimeAxis
 export timedim
 
 """
@@ -39,7 +43,7 @@ correspond to time:
 """
     timeaxis(A)
 
-returns the time axis, if present, of the array `A`, and `nothing` otherwise.
+Return the time axis, if present, of the array `A`, and `nothing` otherwise.
 """
 @inline timeaxis(A::AxisArray) = _timeaxis(A.axes...)
 @traitfn _timeaxis{Ax<:Axis; !TimeAxis{Ax}}(ax::Ax, axes...) = _timeaxis(axes...)
@@ -47,10 +51,46 @@ returns the time axis, if present, of the array `A`, and `nothing` otherwise.
 _timeaxis() = nothing
 
 
+"""
+    istimeaxis(ax)
+
+Test whether the axis `ax` corresponds to time.
+"""
+istimeaxis(ax::Axis) = istimeaxis(typeof(ax))
 @traitfn istimeaxis{Ax<:Axis; !TimeAxis{Ax}}(::Type{Ax}) = false
 @traitfn istimeaxis{Ax<:Axis;  TimeAxis{Ax}}(::Type{Ax}) = true
 
 @traitdef HasTimeAxis{X}
+"""
+    HasTimeAxis{AA}
+
+A trait for testing whether type `AA` has a time axis. Time axes must
+be declared before use.
+
+# Examples
+
+```julia
+using ImagesAxes, SimpleTraits
+
+# Declare that all axes named `:time` are time axes
+@traitimpl TimeAxis{Axis{:time}}
+
+# Define functions that dispatch on AxisArrays that may or may not have time axes
+@traitfn got_time{AA<:AxisArray;  HasTimeAxis{AA}}(img::AA) = "yep, I've got time"
+@traitfn got_time{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = "no, I'm too busy"
+
+julia> A = AxisArray(1:5, Axis{:time}(1:5));
+
+julia> got_time(A)
+"yep, I've got time"
+
+julia> A = AxisArray(1:5, Axis{:x}(1:5));
+
+julia> got_time(A)
+"no, I'm too busy"
+```
+"""
+HasTimeAxis
 
 axtype{T,N,D,Ax}(::Type{AxisArray{T,N,D,Ax}}) = Ax
 axtype(A::AxisArray) = axtype(typeof(A))
@@ -76,11 +116,8 @@ _timedim(dim::Tuple{Int}) = dim[1]
 _timedim(::Tuple{}) = 0
 
 nimages(img::AxisArray) = _nimages(timeaxis(img))
-_nimages() = 1
+_nimages(::Void) = 1
 _nimages(ax::Axis) = length(ax)
-
-# @traitfn ImagesCore.sdims{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = ndims(img)
-# @traitfn ImagesCore.sdims{AA<:AxisArray;  HasTimeAxis{AA}}(img::AA) = ndims(img)-1
 
 ImagesCore.pixelspacing(img::AxisArray) = map(step, axisvalues(img))
 
@@ -111,6 +148,7 @@ filter_space_axes{N}(axes::NTuple{N,Axis}, items::NTuple{N}) =
     _filter_space_axes(tail(axes), tail(items))
 @inline @traitfn _filter_space_axes{Ax<:Axis; !TimeAxis{Ax}}(axes::Tuple{Ax,Vararg{Any}}, items) =
     (items[1], _filter_space_axes(tail(axes), tail(items))...)
+_filter_space_axes(::Tuple{}, ::Tuple{}) = ()
 
 filter_time_axis{N}(axes::NTuple{N,Axis}, items::NTuple{N}) =
     _filter_time_axis(axes, items)
@@ -118,5 +156,6 @@ filter_time_axis{N}(axes::NTuple{N,Axis}, items::NTuple{N}) =
     _filter_time_axis(tail(axes), tail(items))
 @inline @traitfn _filter_time_axis{Ax<:Axis;  TimeAxis{Ax}}(axes::Tuple{Ax,Vararg{Any}}, items) =
     (items[1], _filter_time_axis(tail(axes), tail(items))...)
+_filter_time_axis(::Tuple{}, ::Tuple{}) = ()
 
 end # module
