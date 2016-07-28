@@ -41,7 +41,7 @@ sl = img[Axis{:z}(2)]
 You can also give units to the axes:
 
 ```@example
-using ImagesAxes, SIUnits.ShortUnits
+using ImagesAxes, Unitful
 img = AxisArray(reshape(1:192, (8,8,3)),
                 Axis{:x}(1mm:1mm:8mm),
                 Axis{:y}(1mm:1mm:8mm),
@@ -73,7 +73,7 @@ right after you say `using ImagesAxes` in your top-level script.
 Given an array `A`, you can retrieve its temporal axis with
 
 ```@example 2
-using SIUnits.ShortUnits
+using Unitful
 img = AxisArray(reshape(1:9*300, (3,3,300)),
                 Axis{:x}(1:3),
                 Axis{:y}(1:3),
