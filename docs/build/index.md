@@ -103,7 +103,7 @@ You can also give units to the axes:
 
 
 ```julia
-using ImagesAxes, SIUnits.ShortUnits
+using ImagesAxes, Unitful
 img = AxisArray(reshape(1:192, (8,8,3)),
                 Axis{:x}(1mm:1mm:8mm),
                 Axis{:y}(1mm:1mm:8mm),
@@ -112,9 +112,9 @@ img = AxisArray(reshape(1:192, (8,8,3)),
 
 ```
 3-dimensional AxisArray{Int64,3,...} with axes:
-    :x, 1//1000 m:1//1000 m:1//125 m
-    :y, 1//1000 m:1//1000 m:1//125 m
-    :z, 1//500 m:3//1000 m:1//125 m
+    :x, 1 mm:1 mm:8 mm
+    :y, 1 mm:1 mm:8 mm
+    :z, 2 mm:3 mm:8 mm
 And data, a 8×8×3 Base.ReshapedArray{Int64,3,UnitRange{Int64},Tuple{}}:
 [:, :, 1] =
  1   9  17  25  33  41  49  57
@@ -175,7 +175,7 @@ Given an array `A`, you can retrieve its temporal axis with
 
 
 ```julia
-using SIUnits.ShortUnits
+using Unitful
 img = AxisArray(reshape(1:9*300, (3,3,300)),
                 Axis{:x}(1:3),
                 Axis{:y}(1:3),
@@ -184,7 +184,7 @@ ax = timeaxis(img)
 ```
 
 ```
-AxisArrays.Axis{:time,SIUnits.SIRange{FloatRange{Float64},Float64,0,0,1,0,0,0,0,0,0}}(0.03333333333333333 s:0.03333333333333333 s:10.0 s)
+AxisArrays.Axis{:time,StepRange{Unitful.FloatQuantity{Float64,Unitful.UnitData{(s,)}},Unitful.FloatQuantity{Float64,Unitful.UnitData{(s,)}}}}(0.03333333333333333 s:0.03333333333333333 s:10.0 s)
 ```
 
 
@@ -209,6 +209,7 @@ using ImagesAxes, SimpleTraits
 ```
 
 ```
+WARNING: Method definition nimages(#AA<:AxisArrays.AxisArray) in module ##ex-#273 at /home/tim/.julia/v0.5/SimpleTraits/src/SimpleTraits.jl:152 overwritten at /home/tim/.julia/v0.5/SimpleTraits/src/SimpleTraits.jl:152.
 nimages (generic function with 3 methods)
 ```
 
