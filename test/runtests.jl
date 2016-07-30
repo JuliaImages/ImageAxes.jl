@@ -4,8 +4,6 @@ using ImagesAxes, Base.Test
 
 using SimpleTraits, Unitful
 
-@traitimpl TimeAxis{Axis{:time}}
-
 @traitfn has_time_axis{AA<:AxisArray;  HasTimeAxis{AA}}(::AA) = true
 @traitfn has_time_axis{AA<:AxisArray; !HasTimeAxis{AA}}(::AA) = false
 

@@ -55,39 +55,28 @@ spacing of 3mm, as well as the location of the center of each voxel.
 
 (NOTE: portions of this don't work yet, but it illustrates what I'm aiming for.)
 
-You can declare that an axis corresponds to time like this:
+Any array possessing an axis `Axis{:time}` will be recognized as
+having a temporal dimension.  Given an array `A`,
 
 ```@example 2
-using ImagesAxes, SimpleTraits
-@traitimpl TimeAxis{Axis{:time}}
-```
-
-Henceforth any array possessing an axis `Axis{:time}` will be
-recognized as having a temporal dimension. (You could alternatively
-have chosen `Axis{:t}` or `Axis{:scantime}` or any other name.) Note
-this declaration affects all arrays throughout your entire session.
-Moreover, it should be made before calling any functions on
-array-types that possess such axes; a convenient place to do this is
-right after you say `using ImagesAxes` in your top-level script.
-
-Given an array `A`, you can retrieve its temporal axis with
-
-```@example 2
-using Unitful
+using ImagesAxes, Unitful
 img = AxisArray(reshape(1:9*300, (3,3,300)),
                 Axis{:x}(1:3),
                 Axis{:y}(1:3),
                 Axis{:time}(1s/30:1s/30:10s))
+```
+
+you can retrieve its temporal axis with
+
+```@example 2
 ax = timeaxis(img)
 ```
 
 and index it like
 
 ```@example 2
-# img[ax[3]]
+# img[ax(3)]
 ```
-
-Note that this requires that you've attached unique physical units to the time dimension.  Multiple time axes with different names in the same array are not supported.
 
 You can also specialize methods like this:
 
@@ -115,4 +104,20 @@ using ImagesAxes, SimpleTraits
 end
 ```
 
-and it will return the mean intensity at each timeslice, when appropriate.
+and, when appropriate, it will return the mean intensity at each timeslice.
+
+### Custom temporal axes
+
+Using `SimpleTraits`'s `@traitimpl`, you can add `Axis{:t}` or
+`Axis{:scantime}` or any other name to the list of axes that have a
+temporal dimension:
+
+```@example
+using ImagesAxes, SimpleTraits
+@traitimpl TimeAxis{Axis{:t}}
+```
+
+Note this declaration affects all arrays throughout your entire
+session.  Moreover, it should be made before calling any functions on
+array-types that possess such axes; a convenient place to do this is
+right after you say `using ImagesAxes` in your top-level script.

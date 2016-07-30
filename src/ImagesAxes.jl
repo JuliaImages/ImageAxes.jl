@@ -33,8 +33,12 @@ correspond to time:
 
     @traitimpl TimeAxis{Axis{:time}}
 
+This definition has already been made in ImagesAxes, but you can add
+new names as well.
 """
 @traitdef TimeAxis{X}
+
+@traitimpl TimeAxis{Axis{:time}}
 
 # Note: any axis not marked as a TimeAxis is assumed to correspond to
 # space. It might be useful to allow users to add other possibilities,
@@ -115,7 +119,7 @@ ImagesCore.timedim{T,N}(img::AxisArray{T,N}) = _timedim(filter_time_axis(axes(im
 _timedim(dim::Tuple{Int}) = dim[1]
 _timedim(::Tuple{}) = 0
 
-nimages(img::AxisArray) = _nimages(timeaxis(img))
+ImagesCore.nimages(img::AxisArray) = _nimages(timeaxis(img))
 _nimages(::Void) = 1
 _nimages(ax::Axis) = length(ax)
 
