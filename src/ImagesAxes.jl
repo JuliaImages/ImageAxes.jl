@@ -10,7 +10,7 @@ using Reexport, Colors, SimpleTraits
 
 function Base.convert{C<:Colorant,n}(::Type{Array{C,n}},
                                      img::AxisArray{C,n})
-    copy!(Array{ccolor(Cdest, Csrc)}(size(img)), img)
+    copy!(Array{C}(size(img)), img)
 end
 function Base.convert{Cdest<:Colorant,n,Csrc<:Colorant}(::Type{Array{Cdest,n}},
                                                         img::AxisArray{Csrc,n})
