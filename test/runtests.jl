@@ -1,10 +1,8 @@
-using ImagesAxes, Base.Test
+using Colors, ImagesAxes, Base.Test
 
 @test isempty(detect_ambiguities(ImagesAxes,ImagesCore,Base,Core))
 
 using SimpleTraits, Unitful
-
-@traitimpl TimeAxis{Axis{:time}}
 
 @traitfn has_time_axis{AA<:AxisArray;  HasTimeAxis{AA}}(::AA) = true
 @traitfn has_time_axis{AA<:AxisArray; !HasTimeAxis{AA}}(::AA) = false
@@ -73,6 +71,18 @@ end
     @test @inferred(indices_spatial(A)) === (Base.OneTo(3),)
     @test_throws ErrorException assert_timedim_last(A)
     @test map(istimeaxis, axes(A)) == (true,false)
+end
+
+# Possibly-ambiguous functions
+@testset "ambig" begin
+    A = AxisArray(rand(RGB{U8},3,5), :x, :y)
+    @test isa(convert(Array{RGB{U8},2}, A), Array{RGB{U8},2})
+    @test isa(convert(Array{Gray{U8},2}, A), Array{Gray{U8},2})
+end
+
+@testset "internal" begin
+    A = AxisArray(rand(RGB{U8},3,5), :x, :y)
+    @test ImagesAxes.axtype(A) == Tuple{Axis{:x,UnitRange{Int}}, Axis{:y,UnitRange{Int}}}
 end
 
 nothing
