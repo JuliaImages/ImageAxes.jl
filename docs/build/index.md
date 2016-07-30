@@ -159,27 +159,61 @@ which specifies that `x` and `y` have spacing of 1mm and `z` has a spacing of 3m
 (NOTE: portions of this don't work yet, but it illustrates what I'm aiming for.)
 
 
-You can declare that an axis corresponds to time like this:
+Any array possessing an axis `Axis{:time}` will be recognized as having a temporal dimension.  Given an array `A`,
 
 
 ```julia
-using ImagesAxes, SimpleTraits
-@traitimpl TimeAxis{Axis{:time}}
-```
-
-
-Henceforth any array possessing an axis `Axis{:time}` will be recognized as having a temporal dimension. (You could alternatively have chosen `Axis{:t}` or `Axis{:scantime}` or any other name.) Note this declaration affects all arrays throughout your entire session. Moreover, it should be made before calling any functions on array-types that possess such axes; a convenient place to do this is right after you say `using ImagesAxes` in your top-level script.
-
-
-Given an array `A`, you can retrieve its temporal axis with
-
-
-```julia
-using Unitful
+using ImagesAxes, Unitful
 img = AxisArray(reshape(1:9*300, (3,3,300)),
                 Axis{:x}(1:3),
                 Axis{:y}(1:3),
                 Axis{:time}(1s/30:1s/30:10s))
+```
+
+```
+3-dimensional AxisArray{Int64,3,...} with axes:
+    :x, 1:3
+    :y, 1:3
+    :time, 0.03333333333333333 s:0.03333333333333333 s:10.0 s
+And data, a 3×3×300 Base.ReshapedArray{Int64,3,UnitRange{Int64},Tuple{}}:
+[:, :, 1] =
+ 1  4  7
+ 2  5  8
+ 3  6  9
+
+[:, :, 2] =
+ 10  13  16
+ 11  14  17
+ 12  15  18
+
+[:, :, 3] =
+ 19  22  25
+ 20  23  26
+ 21  24  27
+
+...
+
+[:, :, 298] =
+ 2674  2677  2680
+ 2675  2678  2681
+ 2676  2679  2682
+
+[:, :, 299] =
+ 2683  2686  2689
+ 2684  2687  2690
+ 2685  2688  2691
+
+[:, :, 300] =
+ 2692  2695  2698
+ 2693  2696  2699
+ 2694  2697  2700
+```
+
+
+you can retrieve its temporal axis with
+
+
+```julia
 ax = timeaxis(img)
 ```
 
@@ -192,11 +226,8 @@ and index it like
 
 
 ```julia
-# img[ax[3]]
+# img[ax(3)]
 ```
-
-
-Note that this requires that you've attached unique physical units to the time dimension.  Multiple time axes with different names in the same array are not supported.
 
 
 You can also specialize methods like this:
@@ -209,7 +240,6 @@ using ImagesAxes, SimpleTraits
 ```
 
 ```
-WARNING: Method definition nimages(#AA<:AxisArrays.AxisArray) in module ##ex-#273 at /home/tim/.julia/v0.5/SimpleTraits/src/SimpleTraits.jl:152 overwritten at /home/tim/.julia/v0.5/SimpleTraits/src/SimpleTraits.jl:152.
 nimages (generic function with 3 methods)
 ```
 
@@ -233,5 +263,22 @@ end
 ```
 
 
-and it will return the mean intensity at each timeslice, when appropriate.
+and, when appropriate, it will return the mean intensity at each timeslice.
+
+
+<a id='Custom-temporal-axes-1'></a>
+
+### Custom temporal axes
+
+
+Using `SimpleTraits`'s `@traitimpl`, you can add `Axis{:t}` or `Axis{:scantime}` or any other name to the list of axes that have a temporal dimension:
+
+
+```julia
+using ImagesAxes, SimpleTraits
+@traitimpl TimeAxis{Axis{:t}}
+```
+
+
+Note this declaration affects all arrays throughout your entire session.  Moreover, it should be made before calling any functions on array-types that possess such axes; a convenient place to do this is right after you say `using ImagesAxes` in your top-level script.
 
