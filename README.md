@@ -1,12 +1,13 @@
 # ImageAxes
 
-[![Build Status](https://travis-ci.org/timholy/ImagesAxisArrays.jl.svg?branch=master)](https://travis-ci.org/timholy/ImagesAxisArrays.jl)
+[![Build Status](https://travis-ci.org/JuliaImages/ImageAxes.jl.svg?branch=master)](https://travis-ci.org/JuliaImages/ImageAxes.jl)
 
-[![codecov.io](http://codecov.io/github/timholy/ImagesAxisArrays.jl/coverage.svg?branch=master)](http://codecov.io/github/timholy/ImagesAxisArrays.jl?branch=master)
+[![codecov.io](http://codecov.io/github/JuliaImages/ImageAxes.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaImages/ImageAxes.jl?branch=master)
 
 This small package supports the representation of images as
 [AxisArrays](https://github.com/mbauman/AxisArrays.jl) to endow the
 axes with "meaning," and makes programming with such arrays easy via
-[traits](https://github.com/andyferris/Traitor.jl).
+[traits](https://github.com/mauro3/SimpleTraits.jl).
 
-There will be fancy documentation eventually, but for now your best bet is to [read them on GitHub](docs/build/index.md).
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaImages.github.io/ImageAxes.jl/stable)
+[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaImages.github.io/ImageAxes.jl/latest)
