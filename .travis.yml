@@ -11,10 +11,10 @@ notifications:
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.add("Unitful")'   # we need this for the docs as well as the tests
-  - julia -e 'Pkg.clone(pwd()); Pkg.build("ImagesAxes"); Pkg.test("ImagesAxes"; coverage=true)'
+  - julia -e 'Pkg.clone(pwd()); Pkg.build("ImageAxes"); Pkg.test("ImageAxes"; coverage=true)'
 after_success:
   # push coverage results to Codecov
-  - julia -e 'cd(Pkg.dir("ImagesAxes")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  - julia -e 'cd(Pkg.dir("ImageAxes")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
   # update the documentation
   - julia -e 'Pkg.add("Documenter")'
-  - julia -e 'cd(Pkg.dir("ImagesAxes")); ENV["DOCUMENTER_DEBUG"] = "true"; include(joinpath("docs", "make.jl"))'
+  - julia -e 'cd(Pkg.dir("ImageAxes")); ENV["DOCUMENTER_DEBUG"] = "true"; include(joinpath("docs", "make.jl"))'

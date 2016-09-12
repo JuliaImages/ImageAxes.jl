@@ -1,7 +1,7 @@
-using Documenter, ImagesAxes
+using Documenter, ImageAxes
 
 makedocs()
 
 deploydocs(
-           repo = "github.com/JuliaImages/ImagesAxes.jl.git"
+           repo = "github.com/JuliaImages/ImageAxes.jl.git"
            )

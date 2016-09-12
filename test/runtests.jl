@@ -1,6 +1,6 @@
-using Colors, ImagesAxes, Base.Test
+using Colors, ImageAxes, Base.Test
 
-@test isempty(detect_ambiguities(ImagesAxes,ImagesCore,Base,Core))
+@test isempty(detect_ambiguities(ImageAxes,ImageCore,Base,Core))
 
 using SimpleTraits, Unitful
 
@@ -24,6 +24,8 @@ using SimpleTraits, Unitful
 end
 
 @testset "units, no time" begin
+    const mm = u"mm"
+    const m = u"m"
     A = AxisArray(reshape(1:12, 3, 4), Axis{:x}(1mm:1mm:3mm), Axis{:y}(1m:2m:7m))
     @test @inferred(timeaxis(A)) === nothing
     @test !has_time_axis(A)
@@ -40,6 +42,7 @@ end
 end
 
 @testset "units, time" begin
+    const s = u"s"
     axt = Axis{:time}(1s:1s:4s)
     A = AxisArray(reshape(1:12, 3, 4), Axis{:x}(1:3), axt)
     @test @inferred(timeaxis(A)) === axt
@@ -57,6 +60,7 @@ end
 end
 
 @testset "units, time first" begin
+    const s = u"s"
     axt = Axis{:time}(1s:1s:4s)
     A = AxisArray(reshape(1:12, 4, 3), axt, Axis{:x}(1:3))
     @test @inferred(timeaxis(A)) === axt
@@ -82,7 +86,7 @@ end
 
 @testset "internal" begin
     A = AxisArray(rand(RGB{U8},3,5), :x, :y)
-    @test ImagesAxes.axtype(A) == Tuple{Axis{:x,UnitRange{Int}}, Axis{:y,UnitRange{Int}}}
+    @test ImageAxes.axtype(A) == Tuple{Axis{:x,UnitRange{Int}}, Axis{:y,UnitRange{Int}}}
 end
 
 nothing

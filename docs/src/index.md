@@ -18,7 +18,7 @@ such images.
 # Installation
 
 ```jl
-Pkg.add("ImagesAxes")
+Pkg.add("ImageAxes")
 ```
 
 # Usage
@@ -28,7 +28,7 @@ Pkg.add("ImagesAxes")
 The simplest thing you can do is to provide names to your image axes:
 
 ```@example 1
-using ImagesAxes
+using ImageAxes
 img = AxisArray(reshape(1:192, (8,8,3)), :x, :y, :z)
 ```
 
@@ -41,7 +41,7 @@ sl = img[Axis{:z}(2)]
 You can also give units to the axes:
 
 ```@example
-using ImagesAxes, Unitful
+using ImageAxes, Unitful
 img = AxisArray(reshape(1:192, (8,8,3)),
                 Axis{:x}(1mm:1mm:8mm),
                 Axis{:y}(1mm:1mm:8mm),
@@ -59,7 +59,7 @@ Any array possessing an axis `Axis{:time}` will be recognized as
 having a temporal dimension.  Given an array `A`,
 
 ```@example 2
-using ImagesAxes, Unitful
+using ImageAxes, Unitful
 img = AxisArray(reshape(1:9*300, (3,3,300)),
                 Axis{:x}(1:3),
                 Axis{:y}(1:3),
@@ -81,7 +81,7 @@ and index it like
 You can also specialize methods like this:
 
 ```@example
-using ImagesAxes, SimpleTraits
+using ImageAxes, SimpleTraits
 @traitfn nimages{AA<:AxisArray;  HasTimeAxis{AA}}(img::AA) = length(timeaxis(img))
 @traitfn nimages{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = 1
 ```
@@ -90,7 +90,7 @@ where the pre-defined `HasTimeAxis` trait will restrict that method to
 arrays that have a timeaxis. A more complex example is
 
 ```julia
-using ImagesAxes, SimpleTraits
+using ImageAxes, SimpleTraits
 @traitfn meanintensity{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = mean(img)
 @traitfn function meanintensity{AA<:AxisArray; HasTimeAxis{AA}}(img::AA)
     ax = timeaxis(img)
@@ -113,11 +113,11 @@ Using `SimpleTraits`'s `@traitimpl`, you can add `Axis{:t}` or
 temporal dimension:
 
 ```@example
-using ImagesAxes, SimpleTraits
+using ImageAxes, SimpleTraits
 @traitimpl TimeAxis{Axis{:t}}
 ```
 
 Note this declaration affects all arrays throughout your entire
 session.  Moreover, it should be made before calling any functions on
 array-types that possess such axes; a convenient place to do this is
-right after you say `using ImagesAxes` in your top-level script.
+right after you say `using ImageAxes` in your top-level script.

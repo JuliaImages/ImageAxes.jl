@@ -1,4 +1,4 @@
-site_name:        ImagesAxes.jl
+site_name:        ImageAxes.jl
 repo_url:         https://github.com/JuliaImages/ImagesAxies.jl
 site_description: Julia package for giving "meaning" to the axes of an image
 site_author:      Tim Holy
