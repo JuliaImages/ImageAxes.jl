@@ -42,6 +42,7 @@ You can also give units to the axes:
 
 ```@example
 using ImageAxes, Unitful
+const mm = u"mm"
 img = AxisArray(reshape(1:192, (8,8,3)),
                 Axis{:x}(1mm:1mm:8mm),
                 Axis{:y}(1mm:1mm:8mm),
@@ -53,13 +54,12 @@ spacing of 3mm, as well as the location of the center of each voxel.
 
 ## Temporal axes
 
-(NOTE: portions of this don't work yet, but it illustrates what I'm aiming for.)
-
 Any array possessing an axis `Axis{:time}` will be recognized as
 having a temporal dimension.  Given an array `A`,
 
 ```@example 2
 using ImageAxes, Unitful
+const s = u"s"
 img = AxisArray(reshape(1:9*300, (3,3,300)),
                 Axis{:x}(1:3),
                 Axis{:y}(1:3),
