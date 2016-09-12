@@ -1,4 +1,4 @@
-# ImagesAxes
+# ImageAxes
 
 [![Build Status](https://travis-ci.org/timholy/ImagesAxisArrays.jl.svg?branch=master)](https://travis-ci.org/timholy/ImagesAxisArrays.jl)
 

@@ -1,7 +1,7 @@
 # Currently we can't do this because of julia #17648
 # __precompile__()
 
-module ImagesAxes
+module ImageAxes
 
 using Base: @pure, tail
 using Reexport, Colors, SimpleTraits
@@ -17,7 +17,7 @@ function Base.convert{Cdest<:Colorant,n,Csrc<:Colorant}(::Type{Array{Cdest,n}},
     copy!(Array{ccolor(Cdest, Csrc)}(size(img)), img)
 end
 
-@reexport using ImagesCore  # This has to come after the convert definitions (see julia #17648)
+@reexport using ImageCore  # This has to come after the convert definitions (see julia #17648)
 
 
 export @timeaxis, timeaxis, istimeaxis, TimeAxis, HasTimeAxis
@@ -33,7 +33,7 @@ correspond to time:
 
     @traitimpl TimeAxis{Axis{:time}}
 
-This definition has already been made in ImagesAxes, but you can add
+This definition has already been made in ImageAxes, but you can add
 new names as well.
 """
 @traitdef TimeAxis{X}
@@ -74,7 +74,7 @@ be declared before use.
 # Examples
 
 ```julia
-using ImagesAxes, SimpleTraits
+using ImageAxes, SimpleTraits
 
 # Declare that all axes named `:time` are time axes
 @traitimpl TimeAxis{Axis{:time}}
@@ -115,34 +115,34 @@ using an axis for this purpose.
 Note: if you want to recover information about the time axis, it is
 generally better to use `timeaxis`.
 """
-ImagesCore.timedim{T,N}(img::AxisArray{T,N}) = _timedim(filter_time_axis(axes(img), ntuple(identity, Val{N})))
+ImageCore.timedim{T,N}(img::AxisArray{T,N}) = _timedim(filter_time_axis(axes(img), ntuple(identity, Val{N})))
 _timedim(dim::Tuple{Int}) = dim[1]
 _timedim(::Tuple{}) = 0
 
-ImagesCore.nimages(img::AxisArray) = _nimages(timeaxis(img))
+ImageCore.nimages(img::AxisArray) = _nimages(timeaxis(img))
 _nimages(::Void) = 1
 _nimages(ax::Axis) = length(ax)
 
-ImagesCore.pixelspacing(img::AxisArray) = map(step, axisvalues(img))
+ImageCore.pixelspacing(img::AxisArray) = map(step, axisvalues(img))
 
-ImagesCore.spacedirections(img::AxisArray) = ImagesCore._spacedirections(filter_space_axes(axes(img), pixelspacing(img)))
+ImageCore.spacedirections(img::AxisArray) = ImageCore._spacedirections(filter_space_axes(axes(img), pixelspacing(img)))
 
-ImagesCore.coords_spatial{T,N}(img::AxisArray{T,N}) = filter_space_axes(axes(img), ntuple(identity, Val{N}))
+ImageCore.coords_spatial{T,N}(img::AxisArray{T,N}) = filter_space_axes(axes(img), ntuple(identity, Val{N}))
 
-ImagesCore.spatialorder(img::AxisArray) = filter_space_axes(axes(img), axisnames(img))
+ImageCore.spatialorder(img::AxisArray) = filter_space_axes(axes(img), axisnames(img))
 
-ImagesCore.size_spatial(img::AxisArray)    = filter_space_axes(axes(img), size(img))
-ImagesCore.indices_spatial(img::AxisArray) = filter_space_axes(axes(img), indices(img))
+ImageCore.size_spatial(img::AxisArray)    = filter_space_axes(axes(img), size(img))
+ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(axes(img), indices(img))
 
 #### Utilities for writing "simple algorithms" safely ####
 
 # Check that the time dimension, if present, is last
-@traitfn function ImagesCore.assert_timedim_last{AA<:AxisArray; HasTimeAxis{AA}}(img::AA)
+@traitfn function ImageCore.assert_timedim_last{AA<:AxisArray; HasTimeAxis{AA}}(img::AA)
     ax = axes(img)[end]
     istimeaxis(ax) || error("time dimension is not last")
     nothing
 end
-@traitfn ImagesCore.assert_timedim_last{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = nothing
+@traitfn ImageCore.assert_timedim_last{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = nothing
 
 ### Low level utilities ###
 
