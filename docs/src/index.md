@@ -75,7 +75,7 @@ ax = timeaxis(img)
 and index it like
 
 ```@example 2
-# img[ax(3)]
+img[ax(4)]  # returns the 4th "timeslice"
 ```
 
 You can also specialize methods like this:
