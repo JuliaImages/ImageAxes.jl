@@ -104,6 +104,21 @@ Base.@pure function SimpleTraits.trait{AA<:AxisArray}(t::Type{HasTimeAxis{AA}})
     any(axscan) ? HasTimeAxis{AA} : Not{HasTimeAxis{AA}}
 end
 
+# Specializations to preserve the AxisArray wrapper
+function ImageCore.permuteddimsview(A::AxisArray, perm)
+    axs = axes(A)
+    AxisArray(permuteddimsview(A.data, perm), axs[[perm...]]...)
+end
+function ImageCore.channelview(A::AxisArray)
+    Ac = channelview(A.data)
+    _channelview(A, Ac)
+end
+# without extra dimension:
+_channelview{C,T,N}(A::AxisArray{C,N}, Ac::AbstractArray{T,N}) = AxisArray(Ac, axes(A)...)
+# with extra dimension:
+_channelview(A::AxisArray, Ac::AbstractArray) = AxisArray(Ac, Axis{:color}(indices(Ac,1)), axes(A)...)
+
+
 ### Image properties based on traits ###
 
 """
@@ -153,6 +168,8 @@ filter_space_axes{N}(axes::NTuple{N,Axis}, items::NTuple{N}) =
 @inline @traitfn _filter_space_axes{Ax<:Axis; !TimeAxis{Ax}}(axes::Tuple{Ax,Vararg{Any}}, items) =
     (items[1], _filter_space_axes(tail(axes), tail(items))...)
 _filter_space_axes(::Tuple{}, ::Tuple{}) = ()
+@inline _filter_space_axes{Ax<:Axis{:color}}(axes::Tuple{Ax,Vararg{Any}}, items) =
+    _filter_space_axes(tail(axes), tail(items))
 
 filter_time_axis{N}(axes::NTuple{N,Axis}, items::NTuple{N}) =
     _filter_time_axis(axes, items)

@@ -77,6 +77,15 @@ end
     @test map(istimeaxis, axes(A)) == (true,false)
 end
 
+@testset "color" begin
+    A = AxisArray(rand(RGB{U8}, 4, 5), :y, :x)
+    cv = channelview(A)
+    @test axes(cv) == (Axis{:color}(1:3), Axis{:y}(1:4), Axis{:x}(1:5))
+    @test spatialorder(cv) == (:y, :x)
+    p = permuteddimsview(cv, (2,3,1))
+    @test axes(p) == (Axis{:y}(1:4), Axis{:x}(1:5), Axis{:color}(1:3))
+end
+
 # Possibly-ambiguous functions
 @testset "ambig" begin
     A = AxisArray(rand(RGB{U8},3,5), :x, :y)
