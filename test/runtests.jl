@@ -100,4 +100,6 @@ end
     @test ImageAxes.axtype(A) == Tuple{Axis{:x,Base.OneTo{Int}}, Axis{:y,Base.OneTo{Int}}}
 end
 
+include("deprecated.jl")
+
 nothing
