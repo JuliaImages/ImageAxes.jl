@@ -138,6 +138,13 @@ ImageCore.nimages(img::AxisArray) = _nimages(timeaxis(img))
 _nimages(::Void) = 1
 _nimages(ax::Axis) = length(ax)
 
+function ImageCore.colordim(img::AxisArray)
+    d = _colordim(1, axes(img))
+    d > ndims(img) ? 0 : d
+end
+_colordim{Ax<:Axis{:color}}(d, ax::Tuple{Ax,Vararg{Any}}) = d
+_colordim(d, ax::Tuple{Any,Vararg{Any}}) = _colordim(d+1, tail(ax))
+_colordim(d, ax::Tuple{}) = d+1
 
 ImageCore.pixelspacing(img::AxisArray) = map(step, filter_space_axes(axes(img), axisvalues(img)))
 

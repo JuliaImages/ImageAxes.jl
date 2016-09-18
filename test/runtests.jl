@@ -82,8 +82,10 @@ end
     cv = channelview(A)
     @test axes(cv) == (Axis{:color}(1:3), Axis{:y}(1:4), Axis{:x}(1:5))
     @test spatialorder(cv) == (:y, :x)
+    @test colordim(cv) == 1
     p = permuteddimsview(cv, (2,3,1))
     @test axes(p) == (Axis{:y}(1:4), Axis{:x}(1:5), Axis{:color}(1:3))
+    @test colordim(p) == 3
 end
 
 # Possibly-ambiguous functions
