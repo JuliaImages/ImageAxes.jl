@@ -138,9 +138,10 @@ ImageCore.nimages(img::AxisArray) = _nimages(timeaxis(img))
 _nimages(::Void) = 1
 _nimages(ax::Axis) = length(ax)
 
-ImageCore.pixelspacing(img::AxisArray) = map(step, axisvalues(img))
 
-ImageCore.spacedirections(img::AxisArray) = ImageCore._spacedirections(filter_space_axes(axes(img), pixelspacing(img)))
+ImageCore.pixelspacing(img::AxisArray) = map(step, filter_space_axes(axes(img), axisvalues(img)))
+
+ImageCore.spacedirections(img::AxisArray) = ImageCore._spacedirections(pixelspacing(img))
 
 ImageCore.coords_spatial{T,N}(img::AxisArray{T,N}) = filter_space_axes(axes(img), ntuple(identity, Val{N}))
 

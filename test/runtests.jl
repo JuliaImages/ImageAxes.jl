@@ -49,7 +49,7 @@ end
     @test has_time_axis(A)
     @test timedim(A) == 2
     @test nimages(A) == 4
-    @test @inferred(pixelspacing(A)) === (1,1s)
+    @test @inferred(pixelspacing(A)) === (1,)
     @test @inferred(spacedirections(A)) === ((1,),)
     @test @inferred(coords_spatial(A)) === (1,)
     @test spatialorder(A) === (:x,)
@@ -67,7 +67,7 @@ end
     @test has_time_axis(A)
     @test timedim(A) == 1
     @test nimages(A) == 4
-    @test @inferred(pixelspacing(A)) === (1s,1)
+    @test @inferred(pixelspacing(A)) === (1,)
     @test @inferred(spacedirections(A)) === ((1,),)
     @test @inferred(coords_spatial(A)) === (2,)
     @test spatialorder(A) === (:x,)
