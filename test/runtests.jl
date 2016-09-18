@@ -97,7 +97,7 @@ end
 
 @testset "internal" begin
     A = AxisArray(rand(RGB{U8},3,5), :x, :y)
-    @test ImageAxes.axtype(A) == Tuple{Axis{:x,UnitRange{Int}}, Axis{:y,UnitRange{Int}}}
+    @test ImageAxes.axtype(A) == Tuple{Axis{:x,Base.OneTo{Int}}, Axis{:y,Base.OneTo{Int}}}
 end
 
 nothing

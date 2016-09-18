@@ -187,4 +187,6 @@ filter_time_axis{N}(axes::NTuple{N,Axis}, items::NTuple{N}) =
     (items[1], _filter_time_axis(tail(axes), tail(items))...)
 _filter_time_axis(::Tuple{}, ::Tuple{}) = ()
 
+include("deprecations.jl")
+
 end # module
