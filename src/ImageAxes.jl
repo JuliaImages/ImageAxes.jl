@@ -1,5 +1,4 @@
-# Currently we can't do this because of julia #17648
-# __precompile__()
+__precompile__()
 
 module ImageAxes
 
@@ -7,18 +6,7 @@ using Base: @pure, tail
 using Reexport, Colors, SimpleTraits
 
 @reexport using AxisArrays
-
-function Base.convert{C<:Colorant,n}(::Type{Array{C,n}},
-                                     img::AxisArray{C,n})
-    copy!(Array{C}(size(img)), img)
-end
-function Base.convert{Cdest<:Colorant,n,Csrc<:Colorant}(::Type{Array{Cdest,n}},
-                                                        img::AxisArray{Csrc,n})
-    copy!(Array{ccolor(Cdest, Csrc)}(size(img)), img)
-end
-
-@reexport using ImageCore  # This has to come after the convert definitions (see julia #17648)
-
+@reexport using ImageCore
 
 export @timeaxis, timeaxis, istimeaxis, TimeAxis, HasTimeAxis
 export timedim
@@ -157,7 +145,7 @@ ImageCore.spatialorder(img::AxisArray) = filter_space_axes(axes(img), axisnames(
 ImageCore.size_spatial(img::AxisArray)    = filter_space_axes(axes(img), size(img))
 ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(axes(img), indices(img))
 
-#### Utilities for writing "simple algorithms" safely ####
+### Utilities for writing "simple algorithms" safely ###
 
 # Check that the time dimension, if present, is last
 @traitfn function ImageCore.assert_timedim_last{AA<:AxisArray; HasTimeAxis{AA}}(img::AA)
@@ -166,6 +154,16 @@ ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(axes(img), indices
     nothing
 end
 @traitfn ImageCore.assert_timedim_last{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = nothing
+
+### Convert ###
+function Base.convert{C<:Colorant,n}(::Type{Array{C,n}},
+                                     img::AxisArray{C,n})
+    copy!(Array{C}(size(img)), img)
+end
+function Base.convert{Cdest<:Colorant,n,Csrc<:Colorant}(::Type{Array{Cdest,n}},
+                                                        img::AxisArray{Csrc,n})
+    copy!(Array{ccolor(Cdest, Csrc)}(size(img)), img)
+end
 
 ### Low level utilities ###
 
