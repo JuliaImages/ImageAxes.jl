@@ -1,6 +1,13 @@
 using Colors, ImageAxes, Base.Test
 
-@test isempty(detect_ambiguities(ImageAxes,ImageCore,Base,Core))
+ambs = detect_ambiguities(ImageAxes,ImageCore,Base,Core)
+if !isempty(ambs)
+    println("Ambiguities:")
+    for a in ambs
+        println(a)
+    end
+end
+@test isempty(ambs)
 
 using SimpleTraits, Unitful
 
