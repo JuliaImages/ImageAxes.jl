@@ -8,7 +8,7 @@ using Reexport, Colors, SimpleTraits
 @reexport using AxisArrays
 @reexport using ImageCore
 
-export @timeaxis, timeaxis, istimeaxis, TimeAxis, HasTimeAxis
+export timeaxis, istimeaxis, TimeAxis, HasTimeAxis
 export timedim
 
 """
