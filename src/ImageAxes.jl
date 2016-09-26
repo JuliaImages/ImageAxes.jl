@@ -103,8 +103,8 @@ function ImageCore.channelview(A::AxisArray)
 end
 # without extra dimension:
 _channelview{C,T,N}(A::AxisArray{C,N}, Ac::AbstractArray{T,N}) = AxisArray(Ac, axes(A)...)
-# with extra dimension:
-_channelview(A::AxisArray, Ac::AbstractArray) = AxisArray(Ac, Axis{:color}(indices(Ac,1)), axes(A)...)
+# with extra dimension: (bug: the type parameters shouldn't be necessary, but julia 0.5 dispatches incorrectly without them)
+_channelview{C,T,M,N}(A::AxisArray{C,M}, Ac::AbstractArray{T,N}) = AxisArray(Ac, Axis{:color}(indices(Ac,1)), axes(A)...)
 
 
 ### Image properties based on traits ###

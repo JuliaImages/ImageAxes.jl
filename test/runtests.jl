@@ -84,6 +84,14 @@ end
     @test map(istimeaxis, axes(A)) == (true,false)
 end
 
+@testset "grayscale" begin
+    A = AxisArray(rand(Gray{U8}, 4, 5), :y, :x)
+    cv = channelview(A)
+    @test axes(cv) == (Axis{:y}(1:4), Axis{:x}(1:5))
+    @test spatialorder(cv) == (:y, :x)
+    @test colordim(cv) == 0
+end
+
 @testset "color" begin
     A = AxisArray(rand(RGB{U8}, 4, 5), :y, :x)
     cv = channelview(A)
