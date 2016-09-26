@@ -1,6 +1,13 @@
 using Colors, ImageAxes, Base.Test
 
-@test isempty(detect_ambiguities(ImageAxes,ImageCore,Base,Core))
+ambs = detect_ambiguities(ImageAxes,ImageCore,Base,Core)
+if !isempty(ambs)
+    println("Ambiguities:")
+    for a in ambs
+        println(a)
+    end
+end
+@test isempty(ambs)
 
 using SimpleTraits, Unitful
 
@@ -49,7 +56,7 @@ end
     @test has_time_axis(A)
     @test timedim(A) == 2
     @test nimages(A) == 4
-    @test @inferred(pixelspacing(A)) === (1,1s)
+    @test @inferred(pixelspacing(A)) === (1,)
     @test @inferred(spacedirections(A)) === ((1,),)
     @test @inferred(coords_spatial(A)) === (1,)
     @test spatialorder(A) === (:x,)
@@ -67,7 +74,7 @@ end
     @test has_time_axis(A)
     @test timedim(A) == 1
     @test nimages(A) == 4
-    @test @inferred(pixelspacing(A)) === (1s,1)
+    @test @inferred(pixelspacing(A)) === (1,)
     @test @inferred(spacedirections(A)) === ((1,),)
     @test @inferred(coords_spatial(A)) === (2,)
     @test spatialorder(A) === (:x,)
@@ -75,6 +82,25 @@ end
     @test @inferred(indices_spatial(A)) === (Base.OneTo(3),)
     @test_throws ErrorException assert_timedim_last(A)
     @test map(istimeaxis, axes(A)) == (true,false)
+end
+
+@testset "grayscale" begin
+    A = AxisArray(rand(Gray{U8}, 4, 5), :y, :x)
+    cv = channelview(A)
+    @test axes(cv) == (Axis{:y}(1:4), Axis{:x}(1:5))
+    @test spatialorder(cv) == (:y, :x)
+    @test colordim(cv) == 0
+end
+
+@testset "color" begin
+    A = AxisArray(rand(RGB{U8}, 4, 5), :y, :x)
+    cv = channelview(A)
+    @test axes(cv) == (Axis{:color}(1:3), Axis{:y}(1:4), Axis{:x}(1:5))
+    @test spatialorder(cv) == (:y, :x)
+    @test colordim(cv) == 1
+    p = permuteddimsview(cv, (2,3,1))
+    @test axes(p) == (Axis{:y}(1:4), Axis{:x}(1:5), Axis{:color}(1:3))
+    @test colordim(p) == 3
 end
 
 # Possibly-ambiguous functions
@@ -86,7 +112,9 @@ end
 
 @testset "internal" begin
     A = AxisArray(rand(RGB{U8},3,5), :x, :y)
-    @test ImageAxes.axtype(A) == Tuple{Axis{:x,UnitRange{Int}}, Axis{:y,UnitRange{Int}}}
+    @test ImageAxes.axtype(A) == Tuple{Axis{:x,Base.OneTo{Int}}, Axis{:y,Base.OneTo{Int}}}
 end
+
+include("deprecated.jl")
 
 nothing

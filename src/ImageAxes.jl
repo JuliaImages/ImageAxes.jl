@@ -1,5 +1,4 @@
-# Currently we can't do this because of julia #17648
-# __precompile__()
+__precompile__()
 
 module ImageAxes
 
@@ -7,20 +6,9 @@ using Base: @pure, tail
 using Reexport, Colors, SimpleTraits
 
 @reexport using AxisArrays
+@reexport using ImageCore
 
-function Base.convert{C<:Colorant,n}(::Type{Array{C,n}},
-                                     img::AxisArray{C,n})
-    copy!(Array{C}(size(img)), img)
-end
-function Base.convert{Cdest<:Colorant,n,Csrc<:Colorant}(::Type{Array{Cdest,n}},
-                                                        img::AxisArray{Csrc,n})
-    copy!(Array{ccolor(Cdest, Csrc)}(size(img)), img)
-end
-
-@reexport using ImageCore  # This has to come after the convert definitions (see julia #17648)
-
-
-export @timeaxis, timeaxis, istimeaxis, TimeAxis, HasTimeAxis
+export timeaxis, istimeaxis, TimeAxis, HasTimeAxis
 export timedim
 
 """
@@ -104,6 +92,21 @@ Base.@pure function SimpleTraits.trait{AA<:AxisArray}(t::Type{HasTimeAxis{AA}})
     any(axscan) ? HasTimeAxis{AA} : Not{HasTimeAxis{AA}}
 end
 
+# Specializations to preserve the AxisArray wrapper
+function ImageCore.permuteddimsview(A::AxisArray, perm)
+    axs = axes(A)
+    AxisArray(permuteddimsview(A.data, perm), axs[[perm...]]...)
+end
+function ImageCore.channelview(A::AxisArray)
+    Ac = channelview(A.data)
+    _channelview(A, Ac)
+end
+# without extra dimension:
+_channelview{C,T,N}(A::AxisArray{C,N}, Ac::AbstractArray{T,N}) = AxisArray(Ac, axes(A)...)
+# with extra dimension: (bug: the type parameters shouldn't be necessary, but julia 0.5 dispatches incorrectly without them)
+_channelview{C,T,M,N}(A::AxisArray{C,M}, Ac::AbstractArray{T,N}) = AxisArray(Ac, Axis{:color}(indices(Ac,1)), axes(A)...)
+
+
 ### Image properties based on traits ###
 
 """
@@ -123,9 +126,17 @@ ImageCore.nimages(img::AxisArray) = _nimages(timeaxis(img))
 _nimages(::Void) = 1
 _nimages(ax::Axis) = length(ax)
 
-ImageCore.pixelspacing(img::AxisArray) = map(step, axisvalues(img))
+function ImageCore.colordim(img::AxisArray)
+    d = _colordim(1, axes(img))
+    d > ndims(img) ? 0 : d
+end
+_colordim{Ax<:Axis{:color}}(d, ax::Tuple{Ax,Vararg{Any}}) = d
+_colordim(d, ax::Tuple{Any,Vararg{Any}}) = _colordim(d+1, tail(ax))
+_colordim(d, ax::Tuple{}) = d+1
 
-ImageCore.spacedirections(img::AxisArray) = ImageCore._spacedirections(filter_space_axes(axes(img), pixelspacing(img)))
+ImageCore.pixelspacing(img::AxisArray) = map(step, filter_space_axes(axes(img), axisvalues(img)))
+
+ImageCore.spacedirections(img::AxisArray) = ImageCore._spacedirections(pixelspacing(img))
 
 ImageCore.coords_spatial{T,N}(img::AxisArray{T,N}) = filter_space_axes(axes(img), ntuple(identity, Val{N}))
 
@@ -134,7 +145,7 @@ ImageCore.spatialorder(img::AxisArray) = filter_space_axes(axes(img), axisnames(
 ImageCore.size_spatial(img::AxisArray)    = filter_space_axes(axes(img), size(img))
 ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(axes(img), indices(img))
 
-#### Utilities for writing "simple algorithms" safely ####
+### Utilities for writing "simple algorithms" safely ###
 
 # Check that the time dimension, if present, is last
 @traitfn function ImageCore.assert_timedim_last{AA<:AxisArray; HasTimeAxis{AA}}(img::AA)
@@ -143,6 +154,16 @@ ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(axes(img), indices
     nothing
 end
 @traitfn ImageCore.assert_timedim_last{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = nothing
+
+### Convert ###
+function Base.convert{C<:Colorant,n}(::Type{Array{C,n}},
+                                     img::AxisArray{C,n})
+    copy!(Array{C}(size(img)), img)
+end
+function Base.convert{Cdest<:Colorant,n,Csrc<:Colorant}(::Type{Array{Cdest,n}},
+                                                        img::AxisArray{Csrc,n})
+    copy!(Array{ccolor(Cdest, Csrc)}(size(img)), img)
+end
 
 ### Low level utilities ###
 
@@ -153,6 +174,8 @@ filter_space_axes{N}(axes::NTuple{N,Axis}, items::NTuple{N}) =
 @inline @traitfn _filter_space_axes{Ax<:Axis; !TimeAxis{Ax}}(axes::Tuple{Ax,Vararg{Any}}, items) =
     (items[1], _filter_space_axes(tail(axes), tail(items))...)
 _filter_space_axes(::Tuple{}, ::Tuple{}) = ()
+@inline _filter_space_axes{Ax<:Axis{:color}}(axes::Tuple{Ax,Vararg{Any}}, items) =
+    _filter_space_axes(tail(axes), tail(items))
 
 filter_time_axis{N}(axes::NTuple{N,Axis}, items::NTuple{N}) =
     _filter_time_axis(axes, items)
@@ -161,5 +184,7 @@ filter_time_axis{N}(axes::NTuple{N,Axis}, items::NTuple{N}) =
 @inline @traitfn _filter_time_axis{Ax<:Axis;  TimeAxis{Ax}}(axes::Tuple{Ax,Vararg{Any}}, items) =
     (items[1], _filter_time_axis(tail(axes), tail(items))...)
 _filter_time_axis(::Tuple{}, ::Tuple{}) = ()
+
+include("deprecations.jl")
 
 end # module
