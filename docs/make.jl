@@ -6,5 +6,9 @@ makedocs(modules  = [ImageAxes],
          pages    = ["index.md"])
 
 deploydocs(
-           repo = "github.com/JuliaImages/ImageAxes.jl.git"
+           repo   = "github.com/JuliaImages/ImageAxes.jl.git",
+           julia  = 0.5,
+           target = "build",
+           deps   = nothing,
+           make   = nothing
            )
