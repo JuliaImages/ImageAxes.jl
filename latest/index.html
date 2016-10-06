@@ -1,144 +1,9 @@
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Julia package for giving "meaning" to the axes of an image">
-  <meta name="author" content="Tim Holy">
-  
-  <title>ImageAxes.jl</title>
-  
-
-  <link rel="shortcut icon" href="./img/favicon.ico">
-
-  
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
-
-  <link rel="stylesheet" href="./css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="./css/theme_extra.css" type="text/css" />
-  <link rel="stylesheet" href="./css/highlight.css">
-  <link href="./assets/Documenter.css" rel="stylesheet">
-
-  
-  <script>
-    // Current page data
-    var mkdocs_page_name = "None";
-    var mkdocs_page_input_path = "index.md";
-    var mkdocs_page_url = "/";
-  </script>
-  
-  <script src="./js/jquery-2.1.1.min.js"></script>
-  <script src="./js/modernizr-2.8.3.min.js"></script>
-  <script type="text/javascript" src="./js/highlight.pack.js"></script>
-  <script src="./js/theme.js"></script> 
-  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-  <script src="./assets/mathjaxhelper.js"></script>
-
-  
-</head>
-
-<body class="wy-body-for-nav" role="document">
-
-  <div class="wy-grid-for-nav">
-
-    
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
-      <div class="wy-side-nav-search">
-        <a href="." class="icon icon-home"> ImageAxes.jl</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-  </form>
-</div>
-      </div>
-
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-        <ul class="current">
-          
-            <li>
-    <li class="toctree-l1 current">
-        <a class="current" href=".">Home</a>
-        
-            <ul>
-            
-                <li class="toctree-l3"><a href="#introduction">Introduction</a></li>
-                
-            
-                <li class="toctree-l3"><a href="#installation">Installation</a></li>
-                
-            
-                <li class="toctree-l3"><a href="#usage">Usage</a></li>
-                
-                    <li><a class="toctree-l4" href="#names-and-locations">Names and locations</a></li>
-                
-                    <li><a class="toctree-l4" href="#temporal-axes">Temporal axes</a></li>
-                
-            
-            </ul>
-        
-    </li>
-<li>
-          
-        </ul>
-      </div>
-      &nbsp;
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href=".">ImageAxes.jl</a>
-      </nav>
-
-      
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
-  <ul class="wy-breadcrumbs">
-    <li><a href=".">Docs</a> &raquo;</li>
-    
-      
-    
-    <li>Home</li>
-    <li class="wy-breadcrumbs-aside">
-      
-        
-          <a href="https://github.com/JuliaImages/ImagesAxies.jl" class="icon icon-github"> Edit on GitHub</a>
-        
-      
-    </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main">
-            <div class="section">
-              
-                <p><a id='Introduction-1'></a></p>
-<h1 id="introduction">Introduction</h1>
-<p>While images can often be represented as plain <code>Array</code>s, sometimes additional information about the "meaning" of each axis of the array is needed.  For example, in a 3-dimensional MRI scan, the voxels may not have the same spacing along the z-axis that they do along the x- and y-axes, and this fact should be accounted for during the display and/or analysis of such images.  Likewise, a movie has two spatial axes and one temporal axis; this fact may be relevant for how one performs image processing.</p>
-<p>This package combines features from <a href="https://github.com/mbauman/AxisArrays.jl">AxisArrays</a> and <a href="https://github.com/mauro3/SimpleTraits.jl">SimpleTraits</a> to provide a convenient representation and programming paradigm for dealing with such images.</p>
-<p><a id='Installation-1'></a></p>
-<h1 id="installation">Installation</h1>
-<pre><code class="jl">Pkg.add(&quot;ImageAxes&quot;)
-</code></pre>
-
-<p><a id='Usage-1'></a></p>
-<h1 id="usage">Usage</h1>
-<p><a id='Names-and-locations-1'></a></p>
-<h2 id="names-and-locations">Names and locations</h2>
-<p>The simplest thing you can do is to provide names to your image axes:</p>
-<pre><code class="julia">using ImageAxes
-img = AxisArray(reshape(1:192, (8,8,3)), :x, :y, :z)
-</code></pre>
-
-<pre><code>3-dimensional AxisArray{Int64,3,...} with axes:
-    :x, 1:8
-    :y, 1:8
-    :z, 1:3
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Introduction · ImageAxes documentation</title><link href="assets/documenter.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script></head><body><nav class="toc"><h1>ImageAxes</h1><form class="search" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li class="current"><a class="toctext" href="index.html">Introduction</a><ul class="internal"><li><a class="toctext" href="#Names-and-locations-1">Names and locations</a></li><li><a class="toctext" href="#Temporal-axes-1">Temporal axes</a></li></ul></li></ul></nav><article id="docs"><header><nav><ul><li><a href="index.html">Introduction</a></li></ul><a class="edit-page" href="https://github.com/JuliaImages/ImageAxes.jl/tree/dec047c930f5d256a87518b2502b888e7153d5d4/docs/src/index.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/></header><h1><a class="nav-anchor" id="Introduction-1" href="#Introduction-1">Introduction</a></h1><p>While images can often be represented as plain <code>Array</code>s, sometimes additional information about the &quot;meaning&quot; of each axis of the array is needed.  For example, in a 3-dimensional MRI scan, the voxels may not have the same spacing along the z-axis that they do along the x- and y-axes, and this fact should be accounted for during the display and/or analysis of such images.  Likewise, a movie has two spatial axes and one temporal axis; this fact may be relevant for how one performs image processing.</p><p>This package combines features from <a href="https://github.com/mbauman/AxisArrays.jl">AxisArrays</a> and <a href="https://github.com/mauro3/SimpleTraits.jl">SimpleTraits</a> to provide a convenient representation and programming paradigm for dealing with such images.</p><h1><a class="nav-anchor" id="Installation-1" href="#Installation-1">Installation</a></h1><pre><code class="language-jl">Pkg.add(&quot;ImageAxes&quot;)</code></pre><h1><a class="nav-anchor" id="Usage-1" href="#Usage-1">Usage</a></h1><h2><a class="nav-anchor" id="Names-and-locations-1" href="#Names-and-locations-1">Names and locations</a></h2><p>The simplest thing you can do is to provide names to your image axes:</p><div><pre><code class="language-julia">using ImageAxes
+img = AxisArray(reshape(1:192, (8,8,3)), :x, :y, :z)</code></pre><pre><code class="language-none">3-dimensional AxisArray{Int64,3,...} with axes:
+    :x, Base.OneTo(8)
+    :y, Base.OneTo(8)
+    :z, Base.OneTo(3)
 And data, a 8×8×3 Base.ReshapedArray{Int64,3,UnitRange{Int64},Tuple{}}:
 [:, :, 1] =
  1   9  17  25  33  41  49  57
@@ -168,17 +33,10 @@ And data, a 8×8×3 Base.ReshapedArray{Int64,3,UnitRange{Int64},Tuple{}}:
  133  141  149  157  165  173  181  189
  134  142  150  158  166  174  182  190
  135  143  151  159  167  175  183  191
- 136  144  152  160  168  176  184  192
-</code></pre>
-
-<p>As described in more detail in the <a href="https://github.com/mbauman/AxisArrays.jl">AxisArrays documentation</a>, you can now take slices like this:</p>
-<pre><code class="julia">sl = img[Axis{:z}(2)]
-</code></pre>
-
-<pre><code>2-dimensional AxisArray{Int64,2,...} with axes:
-    :x, 1:8
-    :y, 1:8
-And data, a 8×8 SubArray{Int64,2,Base.ReshapedArray{Int64,3,UnitRange{Int64},Tuple{}},Tuple{Colon,Colon,Int64},true}:
+ 136  144  152  160  168  176  184  192</code></pre></div><p>As described in more detail in the <a href="https://github.com/mbauman/AxisArrays.jl">AxisArrays documentation</a>, you can now take slices like this:</p><div><pre><code class="language-julia">sl = img[Axis{:z}(2)]</code></pre><pre><code class="language-none">2-dimensional AxisArray{Int64,2,...} with axes:
+    :x, Base.OneTo(8)
+    :y, Base.OneTo(8)
+And data, a 8×8 Array{Int64,2}:
  65  73  81  89   97  105  113  121
  66  74  82  90   98  106  114  122
  67  75  83  91   99  107  115  123
@@ -186,19 +44,12 @@ And data, a 8×8 SubArray{Int64,2,Base.ReshapedArray{Int64,3,UnitRange{Int64},Tu
  69  77  85  93  101  109  117  125
  70  78  86  94  102  110  118  126
  71  79  87  95  103  111  119  127
- 72  80  88  96  104  112  120  128
-</code></pre>
-
-<p>You can also give units to the axes:</p>
-<pre><code class="julia">using ImageAxes, Unitful
+ 72  80  88  96  104  112  120  128</code></pre></div><p>You can also give units to the axes:</p><div><pre><code class="language-julia">using ImageAxes, Unitful
 const mm = u&quot;mm&quot;
 img = AxisArray(reshape(1:192, (8,8,3)),
                 Axis{:x}(1mm:1mm:8mm),
                 Axis{:y}(1mm:1mm:8mm),
-                Axis{:z}(2mm:3mm:8mm))
-</code></pre>
-
-<pre><code>3-dimensional AxisArray{Int64,3,...} with axes:
+                Axis{:z}(2mm:3mm:8mm))</code></pre><pre><code class="language-none">3-dimensional AxisArray{Int64,3,...} with axes:
     :x, 1 mm:1 mm:8 mm
     :y, 1 mm:1 mm:8 mm
     :z, 2 mm:3 mm:8 mm
@@ -231,22 +82,12 @@ And data, a 8×8×3 Base.ReshapedArray{Int64,3,UnitRange{Int64},Tuple{}}:
  133  141  149  157  165  173  181  189
  134  142  150  158  166  174  182  190
  135  143  151  159  167  175  183  191
- 136  144  152  160  168  176  184  192
-</code></pre>
-
-<p>which specifies that <code>x</code> and <code>y</code> have spacing of 1mm and <code>z</code> has a spacing of 3mm, as well as the location of the center of each voxel.</p>
-<p><a id='Temporal-axes-1'></a></p>
-<h2 id="temporal-axes">Temporal axes</h2>
-<p>Any array possessing an axis <code>Axis{:time}</code> will be recognized as having a temporal dimension.  Given an array <code>A</code>,</p>
-<pre><code class="julia">using ImageAxes, Unitful
+ 136  144  152  160  168  176  184  192</code></pre></div><p>which specifies that <code>x</code> and <code>y</code> have spacing of 1mm and <code>z</code> has a spacing of 3mm, as well as the location of the center of each voxel.</p><h2><a class="nav-anchor" id="Temporal-axes-1" href="#Temporal-axes-1">Temporal axes</a></h2><p>Any array possessing an axis <code>Axis{:time}</code> will be recognized as having a temporal dimension.  Given an array <code>A</code>,</p><div><pre><code class="language-julia">using ImageAxes, Unitful
 const s = u&quot;s&quot;
 img = AxisArray(reshape(1:9*300, (3,3,300)),
                 Axis{:x}(1:3),
                 Axis{:y}(1:3),
-                Axis{:time}(1s/30:1s/30:10s))
-</code></pre>
-
-<pre><code>3-dimensional AxisArray{Int64,3,...} with axes:
+                Axis{:time}(1s/30:1s/30:10s))</code></pre><pre><code class="language-none">3-dimensional AxisArray{Int64,3,...} with axes:
     :x, 1:3
     :y, 1:3
     :time, 0.03333333333333333 s:0.03333333333333333 s:10.0 s
@@ -281,31 +122,15 @@ And data, a 3×3×300 Base.ReshapedArray{Int64,3,UnitRange{Int64},Tuple{}}:
 [:, :, 300] =
  2692  2695  2698
  2693  2696  2699
- 2694  2697  2700
-</code></pre>
-
-<p>you can retrieve its temporal axis with</p>
-<pre><code class="julia">ax = timeaxis(img)
-</code></pre>
-
-<pre><code>AxisArrays.Axis{:time,StepRange{Quantity{Float64, Dimensions:{𝐓}, Units:{s}},Quantity{Float64, Dimensions:{𝐓}, Units:{s}}}}(0.03333333333333333 s:0.03333333333333333 s:10.0 s)
-</code></pre>
-
-<p>and index it like</p>
-<pre><code class="julia"># img[ax(3)]
-</code></pre>
-
-<p>You can also specialize methods like this:</p>
-<pre><code class="julia">using ImageAxes, SimpleTraits
+ 2694  2697  2700</code></pre></div><p>you can retrieve its temporal axis with</p><div><pre><code class="language-julia">ax = timeaxis(img)</code></pre><pre><code class="language-none">AxisArrays.Axis{:time,StepRange{Quantity{Float64, Dimensions:{𝐓}, Units:{s}},Quantity{Float64, Dimensions:{𝐓}, Units:{s}}}}(0.03333333333333333 s:0.03333333333333333 s:10.0 s)</code></pre></div><p>and index it like</p><div><pre><code class="language-julia">img[ax(4)]  # returns the 4th &quot;timeslice&quot;</code></pre><pre><code class="language-none">2-dimensional AxisArray{Int64,2,...} with axes:
+    :x, 1:3
+    :y, 1:3
+And data, a 3×3 Array{Int64,2}:
+ 28  31  34
+ 29  32  35
+ 30  33  36</code></pre></div><p>You can also specialize methods like this:</p><div><pre><code class="language-julia">using ImageAxes, SimpleTraits
 @traitfn nimages{AA&lt;:AxisArray;  HasTimeAxis{AA}}(img::AA) = length(timeaxis(img))
-@traitfn nimages{AA&lt;:AxisArray; !HasTimeAxis{AA}}(img::AA) = 1
-</code></pre>
-
-<pre><code>nimages (generic function with 3 methods)
-</code></pre>
-
-<p>where the pre-defined <code>HasTimeAxis</code> trait will restrict that method to arrays that have a timeaxis. A more complex example is</p>
-<pre><code class="julia">using ImageAxes, SimpleTraits
+@traitfn nimages{AA&lt;:AxisArray; !HasTimeAxis{AA}}(img::AA) = 1</code></pre><pre><code class="language-none">nimages (generic function with 3 methods)</code></pre></div><p>where the pre-defined <code>HasTimeAxis</code> trait will restrict that method to arrays that have a timeaxis. A more complex example is</p><pre><code class="language-julia">using ImageAxes, SimpleTraits
 @traitfn meanintensity{AA&lt;:AxisArray; !HasTimeAxis{AA}}(img::AA) = mean(img)
 @traitfn function meanintensity{AA&lt;:AxisArray; HasTimeAxis{AA}}(img::AA)
     ax = timeaxis(img)
@@ -316,55 +141,5 @@ And data, a 3×3×300 Base.ReshapedArray{Int64,3,UnitRange{Int64},Tuple{}}:
         intensity[ti] = mean(sl)
     end
     intensity
-end
-</code></pre>
-
-<p>and, when appropriate, it will return the mean intensity at each timeslice.</p>
-<p><a id='Custom-temporal-axes-1'></a></p>
-<h3 id="custom-temporal-axes">Custom temporal axes</h3>
-<p>Using <code>SimpleTraits</code>'s <code>@traitimpl</code>, you can add <code>Axis{:t}</code> or <code>Axis{:scantime}</code> or any other name to the list of axes that have a temporal dimension:</p>
-<pre><code class="julia">using ImageAxes, SimpleTraits
-@traitimpl TimeAxis{Axis{:t}}
-</code></pre>
-
-<p>Note this declaration affects all arrays throughout your entire session.  Moreover, it should be made before calling any functions on array-types that possess such axes; a convenient place to do this is right after you say <code>using ImageAxes</code> in your top-level script.</p>
-              
-            </div>
-          </div>
-          <footer>
-  
-
-  <hr/>
-
-  <div role="contentinfo">
-    <!-- Copyright etc -->
-    
-  </div>
-
-  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-</footer>
-	  
-        </div>
-      </div>
-
-    </section>
-
-  </div>
-
-<div class="rst-versions" role="note" style="cursor: pointer">
-    <span class="rst-current-version" data-toggle="rst-current-version">
-      
-          <a href="https://github.com/JuliaImages/ImagesAxies.jl" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
-      
-      
-      
-    </span>
-</div>
-
-</body>
-</html>
-
-<!--
-MkDocs version : 0.15.3
-Build Date UTC : 2016-09-12 22:55:28.574252
--->
+end</code></pre><p>and, when appropriate, it will return the mean intensity at each timeslice.</p><h3><a class="nav-anchor" id="Custom-temporal-axes-1" href="#Custom-temporal-axes-1">Custom temporal axes</a></h3><p>Using <code>SimpleTraits</code>&#39;s <code>@traitimpl</code>, you can add <code>Axis{:t}</code> or <code>Axis{:scantime}</code> or any other name to the list of axes that have a temporal dimension:</p><div><pre><code class="language-julia">using ImageAxes, SimpleTraits
+@traitimpl TimeAxis{Axis{:t}}</code></pre></div><p>Note this declaration affects all arrays throughout your entire session.  Moreover, it should be made before calling any functions on array-types that possess such axes; a convenient place to do this is right after you say <code>using ImageAxes</code> in your top-level script.</p><footer><hr/></footer></article></body></html>
