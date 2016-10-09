@@ -11,8 +11,6 @@ notifications:
 # uncomment the following lines to override the default test script
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  # For the time being, clone unregistered packages
-  - julia -e 'Pkg.clone("https://github.com/mbauman/AxisArrays.jl.git")'
   - julia -e 'Pkg.add("Unitful")'   # we need this for the docs as well as the tests
   - julia -e 'Pkg.clone(pwd()); Pkg.build("ImageAxes"); Pkg.test("ImageAxes"; coverage=true)'
 after_success:
