@@ -185,6 +185,13 @@ filter_time_axis{N}(axes::NTuple{N,Axis}, items::NTuple{N}) =
     (items[1], _filter_time_axis(tail(axes), tail(items))...)
 _filter_time_axis(::Tuple{}, ::Tuple{}) = ()
 
+# summary: print color types & fixed-point types compactly
+function AxisArrays._summary{T<:Union{Fractional,Colorant},N}(io, A::AxisArray{T,N})
+    print(io, "$N-dimensional AxisArray{")
+    ImageCore.showcoloranttype(io, T)
+    println(io, ",$N,...} with axes:")
+end
+
 include("deprecations.jl")
 
 end # module
