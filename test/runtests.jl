@@ -86,6 +86,7 @@ end
 
 @testset "grayscale" begin
     A = AxisArray(rand(Gray{U8}, 4, 5), :y, :x)
+    @test summary(A) == "2-dimensional AxisArray{Gray{U8},2,...} with axes:\n    :y, Base.OneTo(4)\n    :x, Base.OneTo(5)\nAnd data, a 4×5 Array{Gray{U8},2}"
     cv = channelview(A)
     @test axes(cv) == (Axis{:y}(1:4), Axis{:x}(1:5))
     @test spatialorder(cv) == (:y, :x)
