@@ -11,3 +11,5 @@ axes with "meaning," and makes programming with such arrays easy via
 
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaImages.github.io/ImageAxes.jl/stable)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaImages.github.io/ImageAxes.jl/latest)
+
+See also the main documentation for [JuliaImages](http://juliaimages.github.io/latest/).
