@@ -1,13 +1,15 @@
 using Colors, FixedPointNumbers, ImageAxes, Base.Test
 
-ambs = detect_ambiguities(ImageAxes,ImageCore,Base,Core)
-if !isempty(ambs)
-    println("Ambiguities:")
-    for a in ambs
-        println(a)
+if VERSION < v"0.6.0-dev"
+    ambs = detect_ambiguities(ImageAxes,ImageCore,Base,Core)
+    if !isempty(ambs)
+        println("Ambiguities:")
+        for a in ambs
+            println(a)
+        end
     end
+    @test isempty(ambs)
 end
-@test isempty(ambs)
 
 using SimpleTraits, Unitful
 
@@ -116,6 +118,7 @@ end
     @test ImageAxes.axtype(A) == Tuple{Axis{:x,Base.OneTo{Int}}, Axis{:y,Base.OneTo{Int}}}
 end
 
+info("Beginning of tests with deprecation warnings")
 include("deprecated.jl")
 
 nothing
