@@ -167,7 +167,7 @@ end
 
 ### Low level utilities ###
 
-filter_space_axes{N}(axes::NTuple{N,Axis}, items::NTuple{N}) =
+filter_space_axes{N}(axes::NTuple{N,Axis}, items::NTuple{N,Any}) =
     _filter_space_axes(axes, items)
 @inline @traitfn _filter_space_axes{Ax<:Axis;  TimeAxis{Ax}}(axes::Tuple{Ax,Vararg{Any}}, items) =
     _filter_space_axes(tail(axes), tail(items))
