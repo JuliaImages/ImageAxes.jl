@@ -3,7 +3,7 @@ __precompile__()
 module ImageAxes
 
 using Base: @pure, tail
-using Reexport, Colors, SimpleTraits
+using Reexport, Colors, SimpleTraits, MappedArrays
 
 @reexport using AxisArrays
 @reexport using ImageCore
@@ -38,6 +38,7 @@ new names as well.
 Return the time axis, if present, of the array `A`, and `nothing` otherwise.
 """
 @inline timeaxis(A::AxisArray) = _timeaxis(A.axes...)
+timeaxis(A::AbstractMappedArray) = timeaxis(parent(A))
 @traitfn _timeaxis{Ax<:Axis; !TimeAxis{Ax}}(ax::Ax, axes...) = _timeaxis(axes...)
 @traitfn _timeaxis{Ax<:Axis;  TimeAxis{Ax}}(ax::Ax, axes...) = ax
 _timeaxis() = nothing
