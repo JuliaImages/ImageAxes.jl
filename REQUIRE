@@ -1,6 +1,7 @@
 julia 0.5
-ImageCore
+ImageCore 0.2
 AxisArrays
+MappedArrays
 SimpleTraits
 Reexport
 Colors
