@@ -30,6 +30,8 @@ using SimpleTraits, Unitful
     @test @inferred(indices_spatial(A)) === (Base.OneTo(3), Base.OneTo(4))
     assert_timedim_last(A)
     @test map(istimeaxis, axes(A)) == (false,false)
+
+    @test @inferred(timeaxis(rand(3,5))) == nothing
 end
 
 @testset "units, no time" begin
