@@ -4,12 +4,23 @@ module ImageAxes
 
 using Base: @pure, tail
 using Reexport, Colors, SimpleTraits, MappedArrays
+using Compat
 
 @reexport using AxisArrays
 @reexport using ImageCore
 
-export timeaxis, istimeaxis, TimeAxis, HasTimeAxis
-export timedim
+export # types
+    HasTimeAxis,
+    IndexTimeAny,
+    IndexTimeIncremental,
+    ReadOnlyArray,
+    StreamingTimeArray,
+    TimeAxis,
+    TimeIndexStyle,
+    # functions
+    istimeaxis,
+    timeaxis,
+    timedim
 
 """
     TimeAxis{Ax}
@@ -166,6 +177,99 @@ function Base.convert{Cdest<:Colorant,n,Csrc<:Colorant}(::Type{Array{Cdest,n}},
                                                         img::AxisArray{Csrc,n})
     copy!(Array{ccolor(Cdest, Csrc)}(size(img)), img)
 end
+
+### StreamingTimeArray ###
+
+"""
+    StreamingTimeArray{T,N}
+
+An abstract type possessing a time axis but for which changing time
+"slices" may be expensive or subject to restrictions.
+
+In addition to core array traits (e.g., `indices`), subtypes of
+StreamingTimeArray should implement the following:
+
+- `axes` (returning a tuple of `AxisArray.Axis`; one should be an `Axis{:time}`)
+- `view(A, axt::Axis{:time})` (for creating/selecting a specific temporal slice)
+- optionally, [`TimeIndexStyle`](@ref)
+
+Note that StreamingTimeArrays are not guaranteed to implement
+`setindex!`, and in such cases the object returned by `view` should
+also not implement it. See [`ReadOnlyArray`](@ref).
+"""
+@compat abstract type StreamingTimeArray{T,N} <: AbstractArray{T,N} end
+
+Base.eltype{T}(::Type{StreamingTimeArray{T}}) = T
+Base.eltype{T,N}(::Type{StreamingTimeArray{T,N}}) = T
+Base.eltype{S<:StreamingTimeArray}(::Type{S}) = eltype(supertype(S))
+Base.eltype(S::StreamingTimeArray) = eltype(typeof(S))
+
+Base.ndims{T,N}(::Type{StreamingTimeArray{T,N}}) = N
+Base.ndims{S<:StreamingTimeArray}(::Type{S}) = ndims(supertype(S))
+Base.ndims(S::StreamingTimeArray) = ndims(typeof(S))
+
+AxisArrays.axisnames(S::StreamingTimeArray)  = axisnames(axes(S)...)
+AxisArrays.axisvalues(S::StreamingTimeArray) = axisvalues(axes(S)...)
+function AxisArrays.axisdim{name}(S::StreamingTimeArray, ::Type{Axis{name}})
+    isa(name, Int) && return name <= N ? name : error("axis $name greater than array dimensionality $N")
+    names = axisnames(S)
+    idx = findfirst(names, name)
+    idx == 0 && error("axis $name not found in array axes $names")
+    idx
+end
+AxisArrays.axisdim(S::StreamingTimeArray, ax::Axis) = axisdim(S, typeof(ax))
+AxisArrays.axisdim{name,T}(S::StreamingTimeArray, ::Type{Axis{name,T}}) = axisdim(S, Axis{name})
+
+ImageCore.nimages(S::StreamingTimeArray) = _nimages(timeaxis(S))
+ImageCore.coords_spatial{T,N}(S::StreamingTimeArray{T,N}) =
+    filter_space_axes(axes(S), ntuple(identity, Val{N}))
+ImageCore.spatialorder(S::StreamingTimeArray) = filter_space_axes(axes(S), axisnames())
+ImageCore.size_spatial(img::StreamingTimeArray)    = filter_space_axes(axes(img), size(img))
+ImageCore.indices_spatial(img::StreamingTimeArray) = filter_space_axes(axes(img), indices(img))
+function ImageCore.assert_timedim_last(S::StreamingTimeArray)
+    istimeaxis(axes(S)[end]) || error("time dimension is not last")
+    nothing
+end
+
+timeaxis(S::StreamingTimeArray) = _timeaxis(axes(S)...)
+
+
+"""
+    style = TimeIndexStyle(A)
+
+A trait that indicates the degree of support for indexing the time
+axis of `A`. Choices are [`IndexTimeAny()`](@ref) and
+[`IndexTimeIncremental()`](@ref) (for arrays that only permit advancing
+the time axis, e.g., a video stream from a webcam). The default value
+is `IndexTimeAny()`.
+
+This should be specialized for the type rather than the instance, for example:
+
+```julia
+(::Type{TimeIndexStyle}){A<:MyArrayType}(::Type{A}) = IndexTimeIncremental()
+```
+"""
+@compat abstract type TimeIndexStyle end
+immutable IndexTimeAny <: TimeIndexStyle end
+immutable IndexTimeIncremental <: TimeIndexStyle end
+
+(::Type{TimeIndexStyle}){A<:AbstractArray}(::Type{A}) = IndexTimeAny()
+(::Type{TimeIndexStyle})(A::AbstractArray) = TimeIndexStyle(typeof(A))
+
+immutable ReadOnlyArray{T,N,A<:AbstractArray} <: AbstractArray{T,N}
+    parent::A
+end
+(::Type{ReadOnlyArray}){T,N}(A::AbstractArray{T,N}) = ReadOnlyArray{T,N,typeof(A)}(A)
+
+# don't implement parent because that makes it too easy to violate the read-only promise
+Base.size(A::ReadOnlyArray) = size(A.parent)
+Base.size(A::ReadOnlyArray, d) = size(A.parent, d)
+Base.indices(A::ReadOnlyArray) = indices(A.parent)
+Base.indices(A::ReadOnlyArray, d) = indices(A.parent, d)
+
+@compat Base.IndexStyle{T,N,A}(::Type{ReadOnlyArray{T,N,A}}) = IndexStyle(A)
+Base.similar{S,N}(A::ReadOnlyArray, ::Type{S}, dims::Dims{N}) = similar(A.parent, S, dims)
+@inline Base.getindex(A::ReadOnlyArray, I...) = getindex(A.parent, I...)
 
 ### Low level utilities ###
 
