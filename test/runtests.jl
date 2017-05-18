@@ -158,6 +158,43 @@ end
     @test ImageAxes.axtype(A) == Tuple{Axis{:x,Base.OneTo{Int}}, Axis{:y,Base.OneTo{Int}}}
 end
 
+@testset "streaming" begin
+    P = AxisArray([0 0 0 0;
+                   1 2 3 4;
+                   0 0 0 0], :x, :time)
+    f!(dest, a) = (dest[1] = dest[3] = -0.2*a[2]; dest[2] = 0.6*a[2]; dest)
+    S = @inferred(StreamingArray{Float64}(f!, P, Axis{:time}()))
+    @test @inferred(indices(S)) === (Base.OneTo(3), Base.OneTo(4))
+    @test @inferred(size(S)) == (3,4)
+    @test @inferred(axisnames(S)) == (:x, :time)
+    @test @inferred(axisvalues(S)) === (Base.OneTo(3), Base.OneTo(4))
+    @test axisdim(S, Axis{:x}) == axisdim(S, Axis{:x}(1:2)) == axisdim(S, Axis{:x,UnitRange{Int}}) == 1
+    @test axisdim(S, Axis{:time}) == 2
+    @test_throws ErrorException axisdim(S, Axis{:y})
+    @test axisdim(S, Axis{2}) == 2
+    @test_throws ErrorException axisdim(S, Axis{3})
+    @test @inferred(timeaxis(S)) === Axis{:time}(Base.OneTo(4))
+    @test nimages(S) == 4
+    @test @inferred(coords_spatial(S)) == (1,)
+    @test @inferred(indices_spatial(S)) == (Base.OneTo(3),)
+    @test @inferred(size_spatial(S)) == (3,)
+    @test @inferred(spatialorder(S)) == (:x,)
+    assert_timedim_last(S)
+    for i = 1:4
+        @test @inferred(S[:,i]) == [-0.2,0.6,-0.2]*i
+        @test @inferred(S[2,i]) === 0.6*i
+        @test @inferred(S[Axis{:time}(i)]) == [-0.2,0.6,-0.2]*i
+        @test @inferred(S[Axis{:time}(i),Axis{:x}(2)]) === 0.6*i
+        @test @inferred(S[Axis{:x}(2),Axis{:time}(i)]) === 0.6*i
+    end
+    buf = zeros(3)
+    @test @inferred(getindex!(buf, S, :, 2)) == [-0.2,0.6,-0.2]*2
+    @test StreamIndexStyle(S) === IndexAny()
+    @test StreamIndexStyle(zeros(2,2)) === IndexAny()
+    # internal
+    @test ImageAxes.streamingaxisnames(S) == (:time,)
+end
+
 info("Beginning of tests with deprecation warnings")
 include("deprecated.jl")
 
