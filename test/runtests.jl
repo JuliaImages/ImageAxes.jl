@@ -12,7 +12,7 @@ if !isempty(ambs)
 end
 @test isempty(ambs)
 
-if VERSION < v"0.6.0-dev"
+if VERSION < v"0.6.0-rc2"
     macro inferred6(arg)
         arg
     end
