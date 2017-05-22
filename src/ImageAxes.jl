@@ -4,12 +4,23 @@ module ImageAxes
 
 using Base: @pure, tail
 using Reexport, Colors, SimpleTraits, MappedArrays
+using Compat
 
 @reexport using AxisArrays
 @reexport using ImageCore
 
-export timeaxis, istimeaxis, TimeAxis, HasTimeAxis
-export timedim
+export # types
+    HasTimeAxis,
+    IndexAny,
+    IndexIncremental,
+    StreamingContainer,
+    TimeAxis,
+    StreamIndexStyle,
+    # functions
+    getindex!,
+    istimeaxis,
+    timeaxis,
+    timedim
 
 """
     TimeAxis{Ax}
@@ -166,6 +177,185 @@ function Base.convert{Cdest<:Colorant,n,Csrc<:Colorant}(::Type{Array{Cdest,n}},
                                                         img::AxisArray{Csrc,n})
     copy!(Array{ccolor(Cdest, Csrc)}(size(img)), img)
 end
+
+### StreamingContainer ###
+
+checknames{P}(axnames, ::Type{P}) = checknames(axnames, axisnames(P))
+@noinline function checknames(axnames, parentnames::Tuple{Symbol,Vararg{Symbol}})
+    mapreduce(x->in(x, parentnames), &, axnames) || throw(DimensionMismatch("names $axnames are not included among $parentnames"))
+    nothing
+end
+
+"""
+    A = StreamingContainer{T}(f!, parent, streamingaxes...)
+
+An array-like object possessing one or more axes for which changing "slices" may
+be expensive or subject to restrictions. A canonical example would be
+an AVI stream, where addressing pixels within the same frame is fast
+but jumping between frames might be slow.
+
+It's worth noting that `StreamingContainer` is *not* a subtype of
+`AbstractArray`, but that much of the array interface (`eltype`,
+`ndims`, `indices`, `size`, `getindex`, and `IndexStyle`) is
+supported. A StreamingContainer `A` can be built from an AxisArray,
+but it may also be constructed from other "parent" objects, even
+non-arrays, as long as they support the same functions. In either
+case, the parent should also support the standard AxisArray functions
+`axes`, `axisnames`, `axisvalues`, and `axisdim`; this support will be
+extended to the `StreamingContainer`.
+
+Additionally, a StreamingContainer `A` supports
+
+    getindex!(dest, A, axt::Axis{:time}, ...)
+
+to obtain slices along the streamed axes (here it is assumed that
+`:time` is a streamed axis of `A`). You can implement this directly
+(dispatching on the parameters of `A`), or (if the parent is an
+`AbstractArray`) rely on the fallback
+
+    A.getindex!(dest, view(parent, axs...))
+
+where `A.getindex! = f!` as passed as an argument at construction. `dest` should
+have dimensionality `ndims(parent)-length(streamingaxes)`.
+
+Optionally, define [`StreamIndexStyle(typeof(parent),typeof(f!))`](@ref).
+"""
+immutable StreamingContainer{T,N,streamingaxisnames,P,GetIndex}
+    getindex!::GetIndex
+    parent::P
+end
+function (::Type{StreamingContainer{T}}){T}(f!::Function, parent, axs::Axis...)
+    N = ndims(parent)
+    axnames = axisnames(axs...)
+    checknames(axnames, typeof(parent))
+    StreamingContainer{T,N,axnames,typeof(parent),typeof(f!)}(f!, parent)
+end
+
+Base.parent(S::StreamingContainer) = S.parent
+Base.indices(S::StreamingContainer) = indices(S.parent)
+Base.size(S::StreamingContainer)    = size(S.parent)
+
+AxisArrays.axes(S::StreamingContainer) = axes(parent(S))
+AxisArrays.axisnames(S::StreamingContainer)  = axisnames(axes(S)...)
+AxisArrays.axisvalues(S::StreamingContainer) = axisvalues(axes(S)...)
+function AxisArrays.axisdim{name}(S::StreamingContainer, ::Type{Axis{name}})
+    isa(name, Int) && return name <= ndims(S) ? name : error("axis $name greater than array dimensionality $(ndims(S))")
+    names = axisnames(S)
+    idx = findfirst(names, name)
+    idx == 0 && error("axis $name not found in array axes $names")
+    idx
+end
+AxisArrays.axisdim(S::StreamingContainer, ax::Axis) = axisdim(S, typeof(ax))
+AxisArrays.axisdim{name,T}(S::StreamingContainer, ::Type{Axis{name,T}}) = axisdim(S, Axis{name})
+
+ImageCore.nimages(S::StreamingContainer) = _nimages(timeaxis(S))
+ImageCore.coords_spatial{T,N}(S::StreamingContainer{T,N}) =
+    filter_space_axes(axes(S), ntuple(identity, Val{N}))
+ImageCore.spatialorder(S::StreamingContainer) = filter_space_axes(axes(S), axisnames(S))
+ImageCore.size_spatial(img::StreamingContainer)    = filter_space_axes(axes(img), size(img))
+ImageCore.indices_spatial(img::StreamingContainer) = filter_space_axes(axes(img), indices(img))
+function ImageCore.assert_timedim_last(S::StreamingContainer)
+    istimeaxis(axes(S)[end]) || error("time dimension is not last")
+    nothing
+end
+
+Base.eltype{T,N,names,P,GetIndex}(::Type{StreamingContainer{T,N,names,P,GetIndex}}) = T
+Base.eltype(S::StreamingContainer) = eltype(typeof(S))
+Base.ndims{T,N,names,P,GetIndex}(::Type{StreamingContainer{T,N,names,P,GetIndex}}) = N
+Base.ndims(S::StreamingContainer) = ndims(typeof(S))
+Base.length(S::StreamingContainer) = prod(size(S))
+
+streamingaxisnames{T,N,names,P,GetIndex}(::Type{StreamingContainer{T,N,names,P,GetIndex}}) =
+    names
+streamingaxisnames(S::StreamingContainer) = streamingaxisnames(typeof(S))
+
+timeaxis(S::StreamingContainer) = _timeaxis(axes(S)...)
+
+@inline function getindex!(dest, S::StreamingContainer, axs::Axis...)
+    all(ax->isstreamedaxis(ax,S), axs) || throw(ArgumentError("$axs do not coincide with the streaming axes $(streamingaxisnames(S))"))
+    _getindex!(dest, S.getindex!, parent(S), axs...)
+end
+
+@inline function getindex!(dest, S::StreamingContainer, I...)
+    axs = getslicedindices(S, I)
+    all(x->isa(x, Colon), filter_notstreamed(I, S)) || throw(ArgumentError("positional indices must use `:` for any non-streaming axes"))
+    _getindex!(dest, S.getindex!, parent(S), axs...)
+end
+
+# _getindex! just makes it easy to specialize for particular parent or function types
+@inline function _getindex!(dest, f!, P::AbstractArray, axs::Axis...)
+    v = view(P, axs...)
+    f!(dest, v)
+end
+
+function isstreamedaxis{name,T,N,saxnames}(ax::Axis{name},
+                                           S::StreamingContainer{T,N,saxnames})
+    in(name, saxnames)
+end
+
+sliceindices(S::StreamingContainer) = filter_notstreamed(indices(S), S)
+sliceaxes(S::StreamingContainer) = filter_notstreamed(axes(S), S)
+getslicedindices(S::StreamingContainer, I) = filter_streamed(map((ax, i) -> ax(i), axes(S), I), S)
+
+filter_streamed(inds, S)    = _filter_streamed(inds, axes(S), S)
+filter_notstreamed(inds, S) = _filter_notstreamed(inds, axes(S), S)
+filter_streamed(inds::Tuple{Axis,Vararg{Axis}}, S)    = _filter_streamed(inds, inds, S)
+filter_notstreamed(inds::Tuple{Axis,Vararg{Axis}}, S) = _filter_notstreamed(inds, inds, S)
+
+@generated function _filter_streamed{N}(a, axs::NTuple{N,Axis}, S::StreamingContainer)
+    inds = findin(axisnames(axs.parameters...), streamingaxisnames(S))
+    Expr(:tuple, Expr[:(a[$i]) for i in inds]...)
+end
+@generated function _filter_notstreamed{N}(a, axs::NTuple{N,Axis}, S::StreamingContainer)
+    inds = findin(axisnames(axs.parameters...), streamingaxisnames(S))
+    inds = setdiff(1:N, inds)
+    Expr(:tuple, Expr[:(a[$i]) for i in inds]...)
+end
+
+@inline function Base.getindex{T,N}(S::StreamingContainer{T,N}, inds::Vararg{Union{Colon,Base.ViewIndex},N})
+    tmp = similar(Array{T}, sliceindices(S))
+    getindex!(tmp, S, getslicedindices(S, inds)...)
+    tmp[filter_notstreamed(inds, S)...]
+end
+@inline function Base.getindex(S::StreamingContainer, ind1::Axis, inds_rest::Axis...)
+    axs = sliceaxes(S)
+    tmp = AxisArray(Array{eltype(S)}(map(length, axs)), axs)
+    inds = (ind1, inds_rest...)
+    getindex!(tmp, S, _filter_streamed(inds, inds, S)...)
+    getindex_rest(tmp, _filter_notstreamed(inds, inds, S))
+end
+getindex_rest(tmp, ::Tuple{}) = tmp
+getindex_rest(tmp, inds) = tmp[inds...]
+
+"""
+    style = StreamIndexStyle(A)
+
+A trait that indicates the degree of support for indexing the streaming axes
+of `A`. Choices are [`IndexAny()`](@ref) and
+[`IndexIncremental()`](@ref) (for arrays that only permit advancing
+the time axis, e.g., a video stream from a webcam). The default value
+is `IndexAny()`.
+
+This should be specialized for the type rather than the instance. For
+a StreamingContainer `S`, you can define this trait via
+
+```julia
+(::Type{StreamIndexStyle})(::Type{P}, ::typeof(f!)) = IndexIncremental()
+```
+
+where `P = typeof(parent(S))`.
+"""
+@compat abstract type StreamIndexStyle end
+immutable IndexAny <: StreamIndexStyle end
+immutable IndexIncremental <: StreamIndexStyle end
+
+(::Type{StreamIndexStyle}){A<:AbstractArray}(::Type{A}) = IndexAny()
+(::Type{StreamIndexStyle})(A::AbstractArray) = StreamIndexStyle(typeof(A))
+
+(::Type{StreamIndexStyle}){T,N,axnames,P,GetIndex}(::Type{StreamingContainer{T,N,axnames,P,GetIndex}}) = StreamIndexStyle(P, GetIndex)
+(::Type{StreamIndexStyle}){P,GetIndex}(::Type{P},::Type{GetIndex}) = IndexAny()
+
+(::Type{StreamIndexStyle})(S::StreamingContainer) = StreamIndexStyle(typeof(S))
 
 ### Low level utilities ###
 

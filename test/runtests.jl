@@ -1,14 +1,25 @@
-using Colors, FixedPointNumbers, ImageAxes, MappedArrays, Base.Test
+using Colors, FixedPointNumbers, MappedArrays, Base.Test, ImageCore, AxisArrays
+using Compat
+
+ambs = detect_ambiguities(ImageCore,AxisArrays,Base,Core)
+using ImageAxes
+ambs = setdiff(detect_ambiguities(ImageAxes,ImageCore,AxisArrays,Base,Core), ambs)
+if !isempty(ambs)
+    println("Ambiguities:")
+    for a in ambs
+        println(a)
+    end
+end
+@test isempty(ambs)
 
 if VERSION < v"0.6.0-dev"
-    ambs = detect_ambiguities(ImageAxes,ImageCore,Base,Core)
-    if !isempty(ambs)
-        println("Ambiguities:")
-        for a in ambs
-            println(a)
-        end
+    macro inferred6(arg)
+        arg
     end
-    @test isempty(ambs)
+else
+    macro inferred6(arg)
+        :(Base.Test.@inferred($(esc(arg))))
+    end
 end
 
 using SimpleTraits, Unitful
@@ -156,6 +167,69 @@ end
 @testset "internal" begin
     A = AxisArray(rand(RGB{N0f8},3,5), :x, :y)
     @test ImageAxes.axtype(A) == Tuple{Axis{:x,Base.OneTo{Int}}, Axis{:y,Base.OneTo{Int}}}
+end
+
+# For testing streaming with a non-AxisArray parent
+module TestStreaming
+using AxisArrays, ImageAxes
+
+immutable AVIStream
+    dims::NTuple{3,Int}
+end
+Base.ndims(::AVIStream) = 3
+Base.size(A::AVIStream) = A.dims
+AxisArrays.axisnames{AS<:AVIStream}(::Type{AS}) = (:y, :x, :time)
+AxisArrays.axes(A::AVIStream) = (Axis{:y}(Base.OneTo(A.dims[1])),
+                                 Axis{:x}(Base.OneTo(A.dims[2])),
+                                 Axis{:time}(Base.OneTo(A.dims[3])))
+(::Type{ImageAxes.StreamIndexStyle})(::Type{AVIStream}, ::Type{typeof(read!)}) =
+    IndexIncremental()
+
+end
+
+@testset "streaming" begin
+    P = AxisArray([0 0 0 0;
+                   1 2 3 4;
+                   0 0 0 0], :x, :time)
+    f!(dest, a) = (dest[1] = dest[3] = -0.2*a[2]; dest[2] = 0.6*a[2]; dest)
+    S = @inferred6(StreamingContainer{Float64}(f!, P, Axis{:time}()))
+    @test @inferred(indices(S)) === (Base.OneTo(3), Base.OneTo(4))
+    @test @inferred(size(S)) == (3,4)
+    @test @inferred(length(S)) == 12
+    @test @inferred(axisnames(S)) == (:x, :time)
+    @test @inferred(axisvalues(S)) === (Base.OneTo(3), Base.OneTo(4))
+    @test axisdim(S, Axis{:x}) == axisdim(S, Axis{:x}(1:2)) == axisdim(S, Axis{:x,UnitRange{Int}}) == 1
+    @test axisdim(S, Axis{:time}) == 2
+    @test_throws ErrorException axisdim(S, Axis{:y})
+    @test axisdim(S, Axis{2}) == 2
+    @test_throws ErrorException axisdim(S, Axis{3})
+    @test @inferred(timeaxis(S)) === Axis{:time}(Base.OneTo(4))
+    @test nimages(S) == 4
+    @test @inferred(coords_spatial(S)) == (1,)
+    @test @inferred(indices_spatial(S)) == (Base.OneTo(3),)
+    @test @inferred(size_spatial(S)) == (3,)
+    @test @inferred(spatialorder(S)) == (:x,)
+    assert_timedim_last(S)
+    for i = 1:4
+        @test @inferred(S[:,i]) == [-0.2,0.6,-0.2]*i
+        @test @inferred(S[2,i]) === 0.6*i
+        @test @inferred(S[Axis{:time}(i)]) == [-0.2,0.6,-0.2]*i
+        @test @inferred(S[Axis{:time}(i),Axis{:x}(2)]) === 0.6*i
+        @test @inferred(S[Axis{:x}(2),Axis{:time}(i)]) === 0.6*i
+    end
+    buf = zeros(3)
+    @test @inferred(getindex!(buf, S, :, 2)) == [-0.2,0.6,-0.2]*2
+    @test StreamIndexStyle(S) === IndexAny()
+    @test StreamIndexStyle(zeros(2,2)) === IndexAny()
+    # Non-AbstractArray parent
+    @test_throws DimensionMismatch StreamingContainer{UInt8}(read!, TestStreaming.AVIStream((1080,1920,10000)), Axis{:foo}())
+    V = StreamingContainer{UInt8}(read!, TestStreaming.AVIStream((1080,1920,10000)), Axis{:time}())
+    @test size(V) == (1080,1920,10000)
+    @test axisnames(V) == (:y, :x, :time)
+    @test StreamIndexStyle(V) === IndexIncremental()
+    # internal
+    @test ImageAxes.streamingaxisnames(S) == (:time,)
+    @test ImageAxes.filter_streamed((1,2), S) == (2,)
 end
 
 info("Beginning of tests with deprecation warnings")
