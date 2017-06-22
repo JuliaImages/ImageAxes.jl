@@ -187,7 +187,7 @@ checknames{P}(axnames, ::Type{P}) = checknames(axnames, axisnames(P))
 end
 
 """
-    A = StreamingContainer{T}(f!, parent, streamingaxes...)
+    A = StreamingContainer{T}(f!, parent, streamingaxes::Axis...)
 
 An array-like object possessing one or more axes for which changing "slices" may
 be expensive or subject to restrictions. A canonical example would be
