@@ -234,6 +234,8 @@ end
 Base.parent(S::StreamingContainer) = S.parent
 Base.indices(S::StreamingContainer) = indices(S.parent)
 Base.size(S::StreamingContainer)    = size(S.parent)
+Base.indices(S::StreamingContainer, d) = indices(S.parent, d)
+Base.size(S::StreamingContainer, d)    = size(S.parent, d)
 
 AxisArrays.axes(S::StreamingContainer) = axes(parent(S))
 AxisArrays.axisnames(S::StreamingContainer)  = axisnames(axes(S)...)

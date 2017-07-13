@@ -195,6 +195,8 @@ end
     S = @inferred6(StreamingContainer{Float64}(f!, P, Axis{:time}()))
     @test @inferred(indices(S)) === (Base.OneTo(3), Base.OneTo(4))
     @test @inferred(size(S)) == (3,4)
+    @test @inferred(indices(S, 2)) === Base.OneTo(4)
+    @test @inferred(size(S, 1)) === 3
     @test @inferred(length(S)) == 12
     @test @inferred(axisnames(S)) == (:x, :time)
     @test @inferred(axisvalues(S)) === (Base.OneTo(3), Base.OneTo(4))
