@@ -234,7 +234,4 @@ end
     @test ImageAxes.filter_streamed((1,2), S) == (2,)
 end
 
-info("Beginning of tests with deprecation warnings")
-include("deprecated.jl")
-
 nothing

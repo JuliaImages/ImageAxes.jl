@@ -386,6 +386,4 @@ function AxisArrays._summary{T<:Union{Fractional,Colorant},N}(io, A::AxisArray{T
     println(io, ",$N,...} with axes:")
 end
 
-include("deprecations.jl")
-
 end # module
