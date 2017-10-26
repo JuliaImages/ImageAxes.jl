@@ -17,6 +17,8 @@ export # types
     TimeAxis,
     StreamIndexStyle,
     # functions
+    colordim,
+    data,
     getindex!,
     istimeaxis,
     timeaxis,
@@ -131,7 +133,7 @@ using an axis for this purpose.
 Note: if you want to recover information about the time axis, it is
 generally better to use `timeaxis`.
 """
-ImageCore.timedim{T,N}(img::AxisArray{T,N}) = _timedim(filter_time_axis(axes(img), ntuple(identity, Val{N})))
+timedim{T,N}(img::AxisArray{T,N}) = _timedim(filter_time_axis(axes(img), ntuple(identity, Val{N})))
 _timedim(dim::Tuple{Int}) = dim[1]
 _timedim(::Tuple{}) = 0
 
@@ -139,7 +141,7 @@ ImageCore.nimages(img::AxisArray) = _nimages(timeaxis(img))
 _nimages(::Void) = 1
 _nimages(ax::Axis) = length(ax)
 
-function ImageCore.colordim(img::AxisArray)
+function colordim(img::AxisArray)
     d = _colordim(1, axes(img))
     d > ndims(img) ? 0 : d
 end
@@ -157,6 +159,8 @@ ImageCore.spatialorder(img::AxisArray) = filter_space_axes(axes(img), axisnames(
 
 ImageCore.size_spatial(img::AxisArray)    = filter_space_axes(axes(img), size(img))
 ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(axes(img), indices(img))
+
+data(img::AxisArray) = img.data
 
 ### Utilities for writing "simple algorithms" safely ###
 
@@ -382,7 +386,11 @@ _filter_time_axis(::Tuple{}, ::Tuple{}) = ()
 # summary: print color types & fixed-point types compactly
 function AxisArrays._summary{T<:Union{Fractional,Colorant},N}(io, A::AxisArray{T,N})
     print(io, "$N-dimensional AxisArray{")
-    ImageCore.showcoloranttype(io, T)
+    if T<:Colorant
+        ColorTypes.colorant_string_with_eltype(io, T)
+    else
+        ColorTypes.showcoloranttype(io, T)
+    end
     println(io, ",$N,...} with axes:")
 end
 
