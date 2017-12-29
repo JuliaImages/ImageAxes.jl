@@ -40,7 +40,7 @@ using SimpleTraits, Unitful
     @test @inferred(size_spatial(A)) === (3,4)
     @test @inferred(indices_spatial(A)) === (Base.OneTo(3), Base.OneTo(4))
     assert_timedim_last(A)
-    @test map(istimeaxis, axes(A)) == (false,false)
+    @test map(istimeaxis, AxisArrays.axes(A)) == (false,false)
 
     @test @inferred(timeaxis(rand(3,5))) == nothing
 end
@@ -60,7 +60,7 @@ end
     @test @inferred(size_spatial(A)) === (3,4)
     @test @inferred(indices_spatial(A)) === (Base.OneTo(3),Base.OneTo(4))
     assert_timedim_last(A)
-    @test map(istimeaxis, axes(A)) == (false,false)
+    @test map(istimeaxis, AxisArrays.axes(A)) == (false,false)
 end
 
 @testset "units, time" begin
@@ -78,7 +78,7 @@ end
     @test @inferred(size_spatial(A)) === (3,)
     @test @inferred(indices_spatial(A)) === (Base.OneTo(3),)
     assert_timedim_last(A)
-    @test map(istimeaxis, axes(A)) == (false,true)
+    @test map(istimeaxis, AxisArrays.axes(A)) == (false,true)
 end
 
 @testset "units, time first" begin
@@ -96,14 +96,14 @@ end
     @test @inferred(size_spatial(A)) === (3,)
     @test @inferred(indices_spatial(A)) === (Base.OneTo(3),)
     @test_throws ErrorException assert_timedim_last(A)
-    @test map(istimeaxis, axes(A)) == (true,false)
+    @test map(istimeaxis, AxisArrays.axes(A)) == (true,false)
 end
 
 @testset "grayscale" begin
     A = AxisArray(rand(Gray{N0f8}, 4, 5), :y, :x)
     @test summary(A) == "2-dimensional AxisArray{Gray{N0f8},2,...} with axes:\n    :y, Base.OneTo(4)\n    :x, Base.OneTo(5)\nAnd data, a 4×5 Array{Gray{N0f8},2}"
     cv = channelview(A)
-    @test axes(cv) == (Axis{:y}(1:4), Axis{:x}(1:5))
+    @test AxisArrays.axes(cv) == (Axis{:y}(1:4), Axis{:x}(1:5))
     @test spatialorder(cv) == (:y, :x)
     @test colordim(cv) == 0
 end
@@ -111,11 +111,11 @@ end
 @testset "color" begin
     A = AxisArray(rand(RGB{N0f8}, 4, 5), :y, :x)
     cv = channelview(A)
-    @test axes(cv) == (Axis{:color}(1:3), Axis{:y}(1:4), Axis{:x}(1:5))
+    @test AxisArrays.axes(cv) == (Axis{:color}(1:3), Axis{:y}(1:4), Axis{:x}(1:5))
     @test spatialorder(cv) == (:y, :x)
     @test colordim(cv) == 1
     p = permuteddimsview(cv, (2,3,1))
-    @test axes(p) == (Axis{:y}(1:4), Axis{:x}(1:5), Axis{:color}(1:3))
+    @test AxisArrays.axes(p) == (Axis{:y}(1:4), Axis{:x}(1:5), Axis{:color}(1:3))
     @test colordim(p) == 3
 end
 
