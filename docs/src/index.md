@@ -91,8 +91,8 @@ arrays that have a timeaxis. A more complex example is
 
 ```julia
 using ImageAxes, SimpleTraits
-@traitfn meanintensity{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = mean(img)
-@traitfn function meanintensity{AA<:AxisArray; HasTimeAxis{AA}}(img::AA)
+@traitfn meanintensity(img::AA) where {AA<:AxisArray; !HasTimeAxis{AA}} = mean(img)
+@traitfn function meanintensity(img::AA) where {AA<:AxisArray; HasTimeAxis{AA}}
     ax = timeaxis(img)
     n = length(x)
     intensity = zeros(eltype(img), n)

@@ -1,4 +1,4 @@
-using Colors, FixedPointNumbers, MappedArrays, Base.Test, ImageCore, AxisArrays
+using Colors, FixedPointNumbers, MappedArrays, Test, ImageCore, AxisArrays
 using Compat
 
 ambs = detect_ambiguities(ImageCore,AxisArrays,Base,Core)
@@ -12,20 +12,14 @@ if !isempty(ambs)
 end
 @test isempty(ambs)
 
-if VERSION < v"0.6.0-rc2"
-    macro inferred6(arg)
-        arg
-    end
-else
-    macro inferred6(arg)
-        :(Base.Test.@inferred($(esc(arg))))
-    end
+macro inferred6(arg)
+    :(Base.Test.@inferred($(esc(arg))))
 end
 
 using SimpleTraits, Unitful
 
-@traitfn has_time_axis{AA<:AxisArray;  HasTimeAxis{AA}}(::AA) = true
-@traitfn has_time_axis{AA<:AxisArray; !HasTimeAxis{AA}}(::AA) = false
+@traitfn has_time_axis(::AA) where {AA<:AxisArray;  HasTimeAxis{AA}} = true
+@traitfn has_time_axis(::AA) where {AA<:AxisArray; !HasTimeAxis{AA}} = false
 
 @testset "no units, no time" begin
     A = AxisArray(reshape(1:12, 3, 4), Axis{:x}(1:3), Axis{:y}(1:4))
@@ -173,16 +167,16 @@ end
 module TestStreaming
 using AxisArrays, ImageAxes
 
-immutable AVIStream
+struct AVIStream
     dims::NTuple{3,Int}
 end
 Base.ndims(::AVIStream) = 3
 Base.size(A::AVIStream) = A.dims
-AxisArrays.axisnames{AS<:AVIStream}(::Type{AS}) = (:y, :x, :time)
+AxisArrays.axisnames(::Type{AS}) where {AS<:AVIStream} = (:y, :x, :time)
 AxisArrays.axes(A::AVIStream) = (Axis{:y}(Base.OneTo(A.dims[1])),
                                  Axis{:x}(Base.OneTo(A.dims[2])),
                                  Axis{:time}(Base.OneTo(A.dims[3])))
-(::Type{ImageAxes.StreamIndexStyle})(::Type{AVIStream}, ::Type{typeof(read!)}) =
+ImageAxes.StreamIndexStyle(::Type{AVIStream}, ::Type{typeof(read!)}) =
     IndexIncremental()
 
 end
