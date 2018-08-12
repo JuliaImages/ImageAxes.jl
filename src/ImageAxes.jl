@@ -4,7 +4,7 @@ using Base: @pure, tail
 using Reexport, Colors, SimpleTraits, MappedArrays
 using Compat
 
-@reexport using AxisArrays
+# @reexport using AxisArrays
 @reexport using ImageCore
 import AxisArrays
 using AxisArrays: AxisArray, Axis, axisnames, axisvalues, axisdim, atindex, atvalue, collapse
@@ -134,7 +134,7 @@ using an axis for this purpose.
 Note: if you want to recover information about the time axis, it is
 generally better to use `timeaxis`.
 """
-timedim(img::AxisArray{T,N}) where {T,N} = _timedim(filter_time_axis(AxisArrays.axes(img), ntuple(identity, Val{N})))
+timedim(img::AxisArray{T,N}) where {T,N} = _timedim(filter_time_axis(AxisArrays.axes(img), ntuple(identity, Val(N))))
 _timedim(dim::Tuple{Int}) = dim[1]
 _timedim(::Tuple{}) = 0
 
@@ -154,7 +154,7 @@ ImageCore.pixelspacing(img::AxisArray) = map(step, filter_space_axes(AxisArrays.
 
 ImageCore.spacedirections(img::AxisArray) = ImageCore._spacedirections(pixelspacing(img))
 
-ImageCore.coords_spatial(img::AxisArray{T,N}) where {T,N} = filter_space_axes(AxisArrays.axes(img), ntuple(identity, Val{N}))
+ImageCore.coords_spatial(img::AxisArray{T,N}) where {T,N} = filter_space_axes(AxisArrays.axes(img), ntuple(identity, Val(N)))
 
 ImageCore.spatialorder(img::AxisArray) = filter_space_axes(AxisArrays.axes(img), axisnames(img))
 
@@ -176,11 +176,11 @@ end
 ### Convert ###
 function Base.convert(::Type{Array{C,n}},
                       img::AxisArray{C,n}) where {C<:Colorant,n}
-    copy!(Array{C}(size(img)), img)
+    copyto!(Array{C}(undef, size(img)), img)
 end
 function Base.convert(::Type{Array{Cdest,n}},
                       img::AxisArray{Csrc,n}) where {Cdest<:Colorant,n,Csrc<:Colorant}
-    copy!(Array{ccolor(Cdest, Csrc)}(size(img)), img)
+    copyto!(Array{ccolor(Cdest, Csrc)}(undef, size(img)), img)
 end
 
 ### StreamingContainer ###
@@ -248,8 +248,8 @@ AxisArrays.axisvalues(S::StreamingContainer) = axisvalues(AxisArrays.axes(S)...)
 function AxisArrays.axisdim(S::StreamingContainer, ::Type{Axis{name}}) where name
     isa(name, Int) && return name <= ndims(S) ? name : error("axis $name greater than array dimensionality $(ndims(S))")
     names = axisnames(S)
-    idx = findfirst(names, name)
-    idx == 0 && error("axis $name not found in array axes $names")
+    idx = findfirst(isequal(name), names)
+    idx isa Nothing && error("axis $name not found in array axes $names")
     idx
 end
 AxisArrays.axisdim(S::StreamingContainer, ax::Axis) = axisdim(S, typeof(ax))
@@ -257,7 +257,7 @@ AxisArrays.axisdim(S::StreamingContainer, ::Type{Axis{name,T}}) where {name,T} =
 
 ImageCore.nimages(S::StreamingContainer) = _nimages(timeaxis(S))
 ImageCore.coords_spatial(S::StreamingContainer{T,N}) where {T,N} =
-    filter_space_axes(AxisArrays.axes(S), ntuple(identity, Val{N}))
+    filter_space_axes(AxisArrays.axes(S), ntuple(identity, Val(N)))
 ImageCore.spatialorder(S::StreamingContainer) = filter_space_axes(AxisArrays.axes(S), axisnames(S))
 ImageCore.size_spatial(img::StreamingContainer)    = filter_space_axes(AxisArrays.axes(img), size(img))
 ImageCore.indices_spatial(img::StreamingContainer) = filter_space_axes(AxisArrays.axes(img), indices(img))
@@ -310,11 +310,11 @@ filter_streamed(inds::Tuple{Axis,Vararg{Axis}}, S)    = _filter_streamed(inds, i
 filter_notstreamed(inds::Tuple{Axis,Vararg{Axis}}, S) = _filter_notstreamed(inds, inds, S)
 
 @generated function _filter_streamed(a, axs::NTuple{N,Axis}, S::StreamingContainer) where N
-    inds = findin(axisnames(axs.parameters...), streamingaxisnames(S))
+    inds = findall(x->x in streamingaxisnames(S), axisnames(axs.parameters...))
     Expr(:tuple, Expr[:(a[$i]) for i in inds]...)
 end
 @generated function _filter_notstreamed(a, axs::NTuple{N,Axis}, S::StreamingContainer) where N
-    inds = findin(axisnames(axs.parameters...), streamingaxisnames(S))
+    inds = findall(x->x in streamingaxisnames(S), axisnames(axs.parameters...))
     inds = setdiff(1:N, inds)
     Expr(:tuple, Expr[:(a[$i]) for i in inds]...)
 end
@@ -326,7 +326,7 @@ end
 end
 @inline function Base.getindex(S::StreamingContainer, ind1::Axis, inds_rest::Axis...)
     axs = sliceaxes(S)
-    tmp = AxisArray(Array{eltype(S)}(map(length, axs)), axs)
+    tmp = AxisArray(Array{eltype(S)}(undef, map(length, axs)), axs)
     inds = (ind1, inds_rest...)
     getindex!(tmp, S, _filter_streamed(inds, inds, S)...)
     getindex_rest(tmp, _filter_notstreamed(inds, inds, S))

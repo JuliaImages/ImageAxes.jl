@@ -12,10 +12,6 @@ if !isempty(ambs)
 end
 @test isempty(ambs)
 
-macro inferred6(arg)
-    :(Base.Test.@inferred($(esc(arg))))
-end
-
 using SimpleTraits, Unitful
 
 @traitfn has_time_axis(::AA) where {AA<:AxisArray;  HasTimeAxis{AA}} = true
@@ -40,8 +36,8 @@ using SimpleTraits, Unitful
 end
 
 @testset "units, no time" begin
-    const mm = u"mm"
-    const m = u"m"
+    mm = u"mm"     # in real use these should be global consts
+    m = u"m"
     A = AxisArray(reshape(1:12, 3, 4), Axis{:x}(1mm:1mm:3mm), Axis{:y}(1m:2m:7m))
     @test @inferred(timeaxis(A)) === nothing
     @test !has_time_axis(A)
@@ -58,7 +54,7 @@ end
 end
 
 @testset "units, time" begin
-    const s = u"s"
+    s = u"s" # again, global const
     axt = Axis{:time}(1s:1s:4s)
     A = AxisArray(reshape(1:12, 3, 4), Axis{:x}(1:3), axt)
     @test @inferred(timeaxis(A)) === axt
@@ -76,7 +72,7 @@ end
 end
 
 @testset "units, time first" begin
-    const s = u"s"
+    s = u"s" # global const
     axt = Axis{:time}(1s:1s:4s)
     A = AxisArray(reshape(1:12, 4, 3), axt, Axis{:x}(1:3))
     @test @inferred(timeaxis(A)) === axt
@@ -95,7 +91,7 @@ end
 
 @testset "grayscale" begin
     A = AxisArray(rand(Gray{N0f8}, 4, 5), :y, :x)
-    @test summary(A) == "2-dimensional AxisArray{Gray{N0f8},2,...} with axes:\n    :y, Base.OneTo(4)\n    :x, Base.OneTo(5)\nAnd data, a 4×5 Array{Gray{N0f8},2}"
+    @test summary(A) == "2-dimensional AxisArray{Gray{N0f8},2,...} with axes:\n    :y, Base.OneTo(4)\n    :x, Base.OneTo(5)\nAnd data, a 4×5 Array{Gray{N0f8},2} with eltype Gray{Normed{UInt8,8}}"
     cv = channelview(A)
     @test AxisArrays.axes(cv) == (Axis{:y}(1:4), Axis{:x}(1:5))
     @test spatialorder(cv) == (:y, :x)
@@ -119,9 +115,9 @@ end
     @test @inferred(pixelspacing(P)) == (1, 2)
     M = mappedarray(identity, A)
     @test @inferred(pixelspacing(M)) == (2, 1)
-    const s = u"s"
-    const μm = u"μm"
-    tax = Axis{:time}(range(0.0s, 0.1s, 11))
+    s = u"s" # global const
+    μm = u"μm" # global const
+    tax = Axis{:time}(range(0.0s, step=0.1s, length=11))
     A = AxisArray(rand(N0f16, 4, 5, 11), (:y, :x, :time), (2μm, 1μm, 0.1s))
     P = permuteddimsview(A, (3, 1, 2))
     M = mappedarray(identity, A)
@@ -186,7 +182,8 @@ end
                    1 2 3 4;
                    0 0 0 0], :x, :time)
     f!(dest, a) = (dest[1] = dest[3] = -0.2*a[2]; dest[2] = 0.6*a[2]; dest)
-    S = @inferred6(StreamingContainer{Float64}(f!, P, Axis{:time}()))
+    # Next inference was special-cased for v0.6
+    S = @inferred(StreamingContainer{Float64}(f!, P, Axis{:time}()))
     @test @inferred(indices(S)) === (Base.OneTo(3), Base.OneTo(4))
     @test @inferred(size(S)) == (3,4)
     @test @inferred(indices(S, 2)) === Base.OneTo(4)
