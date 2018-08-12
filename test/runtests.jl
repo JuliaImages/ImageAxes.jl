@@ -1,5 +1,6 @@
-using Colors, FixedPointNumbers, MappedArrays, Test, ImageCore, AxisArrays
+using Colors, FixedPointNumbers, MappedArrays, Test, ImageCore
 using Compat
+import AxisArrays
 
 ambs = detect_ambiguities(ImageCore,AxisArrays,Base,Core)
 using ImageAxes
@@ -184,9 +185,9 @@ end
     f!(dest, a) = (dest[1] = dest[3] = -0.2*a[2]; dest[2] = 0.6*a[2]; dest)
     # Next inference was special-cased for v0.6
     S = @inferred(StreamingContainer{Float64}(f!, P, Axis{:time}()))
-    @test @inferred(indices(S)) === (Base.OneTo(3), Base.OneTo(4))
+    @test @inferred(axes(S)) === (Base.OneTo(3), Base.OneTo(4))
     @test @inferred(size(S)) == (3,4)
-    @test @inferred(indices(S, 2)) === Base.OneTo(4)
+    @test @inferred(axes(S, 2)) === Base.OneTo(4)
     @test @inferred(size(S, 1)) === 3
     @test @inferred(length(S)) == 12
     @test @inferred(axisnames(S)) == (:x, :time)

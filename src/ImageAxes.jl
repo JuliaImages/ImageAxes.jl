@@ -4,11 +4,14 @@ using Base: @pure, tail
 using Reexport, Colors, SimpleTraits, MappedArrays
 using Compat
 
-# @reexport using AxisArrays
-@reexport using ImageCore
+# maybe return to "@reexport AxisArrays" if AxisArrays is fixed
+
 import AxisArrays
 using AxisArrays: AxisArray, Axis, axisnames, axisvalues, axisdim, atindex, atvalue, collapse
 export AxisArray, Axis, axisnames, axisvalues, axisdim, atindex, atvalue, collapse
+
+@reexport using ImageCore
+
 
 export # types
     HasTimeAxis,
@@ -120,7 +123,7 @@ end
 # without extra dimension:
 _channelview(A::AxisArray{C,N}, Ac::AbstractArray{T,N}) where {C,T,N} = AxisArray(Ac, AxisArrays.axes(A)...)
 # with extra dimension: (bug: the type parameters shouldn't be necessary, but julia 0.5 dispatches incorrectly without them)
-_channelview(A::AxisArray{C,M}, Ac::AbstractArray{T,N}) where {C,T,M,N} = AxisArray(Ac, Axis{:color}(indices(Ac,1)), AxisArrays.axes(A)...)
+_channelview(A::AxisArray{C,M}, Ac::AbstractArray{T,N}) where {C,T,M,N} = AxisArray(Ac, Axis{:color}(axes(Ac,1)), AxisArrays.axes(A)...)
 
 
 ### Image properties based on traits ###
@@ -159,7 +162,7 @@ ImageCore.coords_spatial(img::AxisArray{T,N}) where {T,N} = filter_space_axes(Ax
 ImageCore.spatialorder(img::AxisArray) = filter_space_axes(AxisArrays.axes(img), axisnames(img))
 
 ImageCore.size_spatial(img::AxisArray)    = filter_space_axes(AxisArrays.axes(img), size(img))
-ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(AxisArrays.axes(img), indices(img))
+ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(AxisArrays.axes(img), axes(img))
 
 data(img::AxisArray) = img.data
 
@@ -201,7 +204,7 @@ but jumping between frames might be slow.
 
 It's worth noting that `StreamingContainer` is *not* a subtype of
 `AbstractArray`, but that much of the array interface (`eltype`,
-`ndims`, `indices`, `size`, `getindex`, and `IndexStyle`) is
+`ndims`, `axes`, `size`, `getindex`, and `IndexStyle`) is
 supported. A StreamingContainer `A` can be built from an AxisArray,
 but it may also be constructed from other "parent" objects, even
 non-arrays, as long as they support the same functions. In either
@@ -237,9 +240,9 @@ function StreamingContainer{T}(f!::Function, parent, axs::Axis...) where T
 end
 
 Base.parent(S::StreamingContainer) = S.parent
-Base.indices(S::StreamingContainer) = indices(S.parent)
+Base.axes(S::StreamingContainer) = axes(S.parent)
 Base.size(S::StreamingContainer)    = size(S.parent)
-Base.indices(S::StreamingContainer, d) = indices(S.parent, d)
+Base.axes(S::StreamingContainer, d) = axes(S.parent, d)
 Base.size(S::StreamingContainer, d)    = size(S.parent, d)
 
 AxisArrays.axes(S::StreamingContainer) = AxisArrays.axes(parent(S))
@@ -260,7 +263,7 @@ ImageCore.coords_spatial(S::StreamingContainer{T,N}) where {T,N} =
     filter_space_axes(AxisArrays.axes(S), ntuple(identity, Val(N)))
 ImageCore.spatialorder(S::StreamingContainer) = filter_space_axes(AxisArrays.axes(S), axisnames(S))
 ImageCore.size_spatial(img::StreamingContainer)    = filter_space_axes(AxisArrays.axes(img), size(img))
-ImageCore.indices_spatial(img::StreamingContainer) = filter_space_axes(AxisArrays.axes(img), indices(img))
+ImageCore.indices_spatial(img::StreamingContainer) = filter_space_axes(AxisArrays.axes(img), axes(img))
 function ImageCore.assert_timedim_last(S::StreamingContainer)
     istimeaxis(AxisArrays.axes(S)[end]) || error("time dimension is not last")
     nothing
@@ -300,7 +303,7 @@ function isstreamedaxis(ax::Axis{name},
     in(name, saxnames)
 end
 
-sliceindices(S::StreamingContainer) = filter_notstreamed(indices(S), S)
+sliceindices(S::StreamingContainer) = filter_notstreamed(axes(S), S)
 sliceaxes(S::StreamingContainer) = filter_notstreamed(AxisArrays.axes(S), S)
 getslicedindices(S::StreamingContainer, I) = filter_streamed(map((ax, i) -> ax(i), AxisArrays.axes(S), I), S)
 
