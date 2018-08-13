@@ -109,7 +109,7 @@ end
 
 # Specializations to preserve the AxisArray wrapper
 function ImageCore.permuteddimsview(A::AxisArray, perm)
-    axs = axes(A)
+    axs = AxisArrays.axes(A)
     AxisArray(permuteddimsview(A.data, perm), axs[[perm...]]...)
 end
 function ImageCore.channelview(A::AxisArray)
@@ -117,9 +117,9 @@ function ImageCore.channelview(A::AxisArray)
     _channelview(A, Ac)
 end
 # without extra dimension:
-_channelview{C,T,N}(A::AxisArray{C,N}, Ac::AbstractArray{T,N}) = AxisArray(Ac, axes(A)...)
+_channelview{C,T,N}(A::AxisArray{C,N}, Ac::AbstractArray{T,N}) = AxisArray(Ac, AxisArrays.axes(A)...)
 # with extra dimension: (bug: the type parameters shouldn't be necessary, but julia 0.5 dispatches incorrectly without them)
-_channelview{C,T,M,N}(A::AxisArray{C,M}, Ac::AbstractArray{T,N}) = AxisArray(Ac, Axis{:color}(indices(Ac,1)), axes(A)...)
+_channelview{C,T,M,N}(A::AxisArray{C,M}, Ac::AbstractArray{T,N}) = AxisArray(Ac, Axis{:color}(indices(Ac,1)), AxisArrays.axes(A)...)
 
 
 ### Image properties based on traits ###
@@ -133,7 +133,7 @@ using an axis for this purpose.
 Note: if you want to recover information about the time axis, it is
 generally better to use `timeaxis`.
 """
-timedim{T,N}(img::AxisArray{T,N}) = _timedim(filter_time_axis(axes(img), ntuple(identity, Val{N})))
+timedim{T,N}(img::AxisArray{T,N}) = _timedim(filter_time_axis(AxisArrays.axes(img), ntuple(identity, Val{N})))
 _timedim(dim::Tuple{Int}) = dim[1]
 _timedim(::Tuple{}) = 0
 
@@ -142,23 +142,23 @@ _nimages(::Void) = 1
 _nimages(ax::Axis) = length(ax)
 
 function colordim(img::AxisArray)
-    d = _colordim(1, axes(img))
+    d = _colordim(1, AxisArrays.axes(img))
     d > ndims(img) ? 0 : d
 end
 _colordim{Ax<:Axis{:color}}(d, ax::Tuple{Ax,Vararg{Any}}) = d
 _colordim(d, ax::Tuple{Any,Vararg{Any}}) = _colordim(d+1, tail(ax))
 _colordim(d, ax::Tuple{}) = d+1
 
-ImageCore.pixelspacing(img::AxisArray) = map(step, filter_space_axes(axes(img), axisvalues(img)))
+ImageCore.pixelspacing(img::AxisArray) = map(step, filter_space_axes(AxisArrays.axes(img), axisvalues(img)))
 
 ImageCore.spacedirections(img::AxisArray) = ImageCore._spacedirections(pixelspacing(img))
 
-ImageCore.coords_spatial{T,N}(img::AxisArray{T,N}) = filter_space_axes(axes(img), ntuple(identity, Val{N}))
+ImageCore.coords_spatial{T,N}(img::AxisArray{T,N}) = filter_space_axes(AxisArrays.axes(img), ntuple(identity, Val{N}))
 
-ImageCore.spatialorder(img::AxisArray) = filter_space_axes(axes(img), axisnames(img))
+ImageCore.spatialorder(img::AxisArray) = filter_space_axes(AxisArrays.axes(img), axisnames(img))
 
-ImageCore.size_spatial(img::AxisArray)    = filter_space_axes(axes(img), size(img))
-ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(axes(img), indices(img))
+ImageCore.size_spatial(img::AxisArray)    = filter_space_axes(AxisArrays.axes(img), size(img))
+ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(AxisArrays.axes(img), indices(img))
 
 data(img::AxisArray) = img.data
 
@@ -166,7 +166,7 @@ data(img::AxisArray) = img.data
 
 # Check that the time dimension, if present, is last
 @traitfn function ImageCore.assert_timedim_last{AA<:AxisArray; HasTimeAxis{AA}}(img::AA)
-    ax = axes(img)[end]
+    ax = AxisArrays.axes(img)[end]
     istimeaxis(ax) || error("time dimension is not last")
     nothing
 end
@@ -241,9 +241,9 @@ Base.size(S::StreamingContainer)    = size(S.parent)
 Base.indices(S::StreamingContainer, d) = indices(S.parent, d)
 Base.size(S::StreamingContainer, d)    = size(S.parent, d)
 
-AxisArrays.axes(S::StreamingContainer) = axes(parent(S))
-AxisArrays.axisnames(S::StreamingContainer)  = axisnames(axes(S)...)
-AxisArrays.axisvalues(S::StreamingContainer) = axisvalues(axes(S)...)
+AxisArrays.axes(S::StreamingContainer) = AxisArrays.axes(parent(S))
+AxisArrays.axisnames(S::StreamingContainer)  = axisnames(AxisArrays.axes(S)...)
+AxisArrays.axisvalues(S::StreamingContainer) = axisvalues(AxisArrays.axes(S)...)
 function AxisArrays.axisdim{name}(S::StreamingContainer, ::Type{Axis{name}})
     isa(name, Int) && return name <= ndims(S) ? name : error("axis $name greater than array dimensionality $(ndims(S))")
     names = axisnames(S)
@@ -256,12 +256,12 @@ AxisArrays.axisdim{name,T}(S::StreamingContainer, ::Type{Axis{name,T}}) = axisdi
 
 ImageCore.nimages(S::StreamingContainer) = _nimages(timeaxis(S))
 ImageCore.coords_spatial{T,N}(S::StreamingContainer{T,N}) =
-    filter_space_axes(axes(S), ntuple(identity, Val{N}))
-ImageCore.spatialorder(S::StreamingContainer) = filter_space_axes(axes(S), axisnames(S))
-ImageCore.size_spatial(img::StreamingContainer)    = filter_space_axes(axes(img), size(img))
-ImageCore.indices_spatial(img::StreamingContainer) = filter_space_axes(axes(img), indices(img))
+    filter_space_axes(AxisArrays.axes(S), ntuple(identity, Val{N}))
+ImageCore.spatialorder(S::StreamingContainer) = filter_space_axes(AxisArrays.axes(S), axisnames(S))
+ImageCore.size_spatial(img::StreamingContainer)    = filter_space_axes(AxisArrays.axes(img), size(img))
+ImageCore.indices_spatial(img::StreamingContainer) = filter_space_axes(AxisArrays.axes(img), indices(img))
 function ImageCore.assert_timedim_last(S::StreamingContainer)
-    istimeaxis(axes(S)[end]) || error("time dimension is not last")
+    istimeaxis(AxisArrays.axes(S)[end]) || error("time dimension is not last")
     nothing
 end
 
@@ -275,7 +275,7 @@ streamingaxisnames{T,N,names,P,GetIndex}(::Type{StreamingContainer{T,N,names,P,G
     names
 streamingaxisnames(S::StreamingContainer) = streamingaxisnames(typeof(S))
 
-timeaxis(S::StreamingContainer) = _timeaxis(axes(S)...)
+timeaxis(S::StreamingContainer) = _timeaxis(AxisArrays.axes(S)...)
 
 @inline function getindex!(dest, S::StreamingContainer, axs::Axis...)
     all(ax->isstreamedaxis(ax,S), axs) || throw(ArgumentError("$axs do not coincide with the streaming axes $(streamingaxisnames(S))"))
@@ -300,11 +300,11 @@ function isstreamedaxis{name,T,N,saxnames}(ax::Axis{name},
 end
 
 sliceindices(S::StreamingContainer) = filter_notstreamed(indices(S), S)
-sliceaxes(S::StreamingContainer) = filter_notstreamed(axes(S), S)
-getslicedindices(S::StreamingContainer, I) = filter_streamed(map((ax, i) -> ax(i), axes(S), I), S)
+sliceaxes(S::StreamingContainer) = filter_notstreamed(AxisArrays.axes(S), S)
+getslicedindices(S::StreamingContainer, I) = filter_streamed(map((ax, i) -> ax(i), AxisArrays.axes(S), I), S)
 
-filter_streamed(inds, S)    = _filter_streamed(inds, axes(S), S)
-filter_notstreamed(inds, S) = _filter_notstreamed(inds, axes(S), S)
+filter_streamed(inds, S)    = _filter_streamed(inds, AxisArrays.axes(S), S)
+filter_notstreamed(inds, S) = _filter_notstreamed(inds, AxisArrays.axes(S), S)
 filter_streamed(inds::Tuple{Axis,Vararg{Axis}}, S)    = _filter_streamed(inds, inds, S)
 filter_notstreamed(inds::Tuple{Axis,Vararg{Axis}}, S) = _filter_notstreamed(inds, inds, S)
 
