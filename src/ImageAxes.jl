@@ -1,13 +1,17 @@
-__precompile__()
-
 module ImageAxes
 
 using Base: @pure, tail
 using Reexport, Colors, SimpleTraits, MappedArrays
 using Compat
 
-@reexport using AxisArrays
+# maybe return to "@reexport AxisArrays" if AxisArrays is fixed
+
+import AxisArrays
+using AxisArrays: AxisArray, Axis, axisnames, axisvalues, axisdim, atindex, atvalue, collapse
+export AxisArray, Axis, axisnames, axisvalues, axisdim, atindex, atvalue, collapse
+
 @reexport using ImageCore
+
 
 export # types
     HasTimeAxis,
@@ -53,8 +57,8 @@ Return the time axis, if present, of the array `A`, and `nothing` otherwise.
 @inline timeaxis(A::AxisArray) = _timeaxis(A.axes...)
 timeaxis(A::AbstractArray) = nothing
 timeaxis(A::AbstractMappedArray) = timeaxis(parent(A))
-@traitfn _timeaxis{Ax<:Axis; !TimeAxis{Ax}}(ax::Ax, axes...) = _timeaxis(axes...)
-@traitfn _timeaxis{Ax<:Axis;  TimeAxis{Ax}}(ax::Ax, axes...) = ax
+@traitfn _timeaxis(ax::Ax, axes...) where {Ax<:Axis; !TimeAxis{Ax}} = _timeaxis(axes...)
+@traitfn _timeaxis(ax::Ax, axes...) where {Ax<:Axis;  TimeAxis{Ax}} = ax
 _timeaxis() = nothing
 
 
@@ -64,8 +68,8 @@ _timeaxis() = nothing
 Test whether the axis `ax` corresponds to time.
 """
 istimeaxis(ax::Axis) = istimeaxis(typeof(ax))
-@traitfn istimeaxis{Ax<:Axis; !TimeAxis{Ax}}(::Type{Ax}) = false
-@traitfn istimeaxis{Ax<:Axis;  TimeAxis{Ax}}(::Type{Ax}) = true
+@traitfn istimeaxis(::Type{Ax}) where {Ax<:Axis; !TimeAxis{Ax}} = false
+@traitfn istimeaxis(::Type{Ax}) where {Ax<:Axis;  TimeAxis{Ax}} = true
 
 @traitdef HasTimeAxis{X}
 """
@@ -99,10 +103,10 @@ julia> got_time(A)
 """
 HasTimeAxis
 
-axtype{T,N,D,Ax}(::Type{AxisArray{T,N,D,Ax}}) = Ax
+axtype(::Type{AxisArray{T,N,D,Ax}}) where {T,N,D,Ax} = Ax
 axtype(A::AxisArray) = axtype(typeof(A))
 
-Base.@pure function SimpleTraits.trait{AA<:AxisArray}(t::Type{HasTimeAxis{AA}})
+Base.@pure function SimpleTraits.trait(t::Type{HasTimeAxis{AA}}) where AA<:AxisArray
     axscan = map(S->istimeaxis(S), axtype(AA).parameters)
     any(axscan) ? HasTimeAxis{AA} : Not{HasTimeAxis{AA}}
 end
@@ -117,9 +121,9 @@ function ImageCore.channelview(A::AxisArray)
     _channelview(A, Ac)
 end
 # without extra dimension:
-_channelview{C,T,N}(A::AxisArray{C,N}, Ac::AbstractArray{T,N}) = AxisArray(Ac, AxisArrays.axes(A)...)
+_channelview(A::AxisArray{C,N}, Ac::AbstractArray{T,N}) where {C,T,N} = AxisArray(Ac, AxisArrays.axes(A)...)
 # with extra dimension: (bug: the type parameters shouldn't be necessary, but julia 0.5 dispatches incorrectly without them)
-_channelview{C,T,M,N}(A::AxisArray{C,M}, Ac::AbstractArray{T,N}) = AxisArray(Ac, Axis{:color}(indices(Ac,1)), AxisArrays.axes(A)...)
+_channelview(A::AxisArray{C,M}, Ac::AbstractArray{T,N}) where {C,T,M,N} = AxisArray(Ac, Axis{:color}(axes(Ac,1)), AxisArrays.axes(A)...)
 
 
 ### Image properties based on traits ###
@@ -133,19 +137,19 @@ using an axis for this purpose.
 Note: if you want to recover information about the time axis, it is
 generally better to use `timeaxis`.
 """
-timedim{T,N}(img::AxisArray{T,N}) = _timedim(filter_time_axis(AxisArrays.axes(img), ntuple(identity, Val{N})))
+timedim(img::AxisArray{T,N}) where {T,N} = _timedim(filter_time_axis(AxisArrays.axes(img), ntuple(identity, Val(N))))
 _timedim(dim::Tuple{Int}) = dim[1]
 _timedim(::Tuple{}) = 0
 
 ImageCore.nimages(img::AxisArray) = _nimages(timeaxis(img))
-_nimages(::Void) = 1
+_nimages(::Nothing) = 1
 _nimages(ax::Axis) = length(ax)
 
 function colordim(img::AxisArray)
     d = _colordim(1, AxisArrays.axes(img))
     d > ndims(img) ? 0 : d
 end
-_colordim{Ax<:Axis{:color}}(d, ax::Tuple{Ax,Vararg{Any}}) = d
+_colordim(d, ax::Tuple{Ax,Vararg{Any}}) where {Ax<:Axis{:color}} = d
 _colordim(d, ax::Tuple{Any,Vararg{Any}}) = _colordim(d+1, tail(ax))
 _colordim(d, ax::Tuple{}) = d+1
 
@@ -153,38 +157,38 @@ ImageCore.pixelspacing(img::AxisArray) = map(step, filter_space_axes(AxisArrays.
 
 ImageCore.spacedirections(img::AxisArray) = ImageCore._spacedirections(pixelspacing(img))
 
-ImageCore.coords_spatial{T,N}(img::AxisArray{T,N}) = filter_space_axes(AxisArrays.axes(img), ntuple(identity, Val{N}))
+ImageCore.coords_spatial(img::AxisArray{T,N}) where {T,N} = filter_space_axes(AxisArrays.axes(img), ntuple(identity, Val(N)))
 
 ImageCore.spatialorder(img::AxisArray) = filter_space_axes(AxisArrays.axes(img), axisnames(img))
 
 ImageCore.size_spatial(img::AxisArray)    = filter_space_axes(AxisArrays.axes(img), size(img))
-ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(AxisArrays.axes(img), indices(img))
+ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(AxisArrays.axes(img), axes(img))
 
 data(img::AxisArray) = img.data
 
 ### Utilities for writing "simple algorithms" safely ###
 
 # Check that the time dimension, if present, is last
-@traitfn function ImageCore.assert_timedim_last{AA<:AxisArray; HasTimeAxis{AA}}(img::AA)
+@traitfn function ImageCore.assert_timedim_last(img::AA) where {AA<:AxisArray; HasTimeAxis{AA}}
     ax = AxisArrays.axes(img)[end]
     istimeaxis(ax) || error("time dimension is not last")
     nothing
 end
-@traitfn ImageCore.assert_timedim_last{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = nothing
+@traitfn ImageCore.assert_timedim_last(img::AA) where {AA<:AxisArray; !HasTimeAxis{AA}} = nothing
 
 ### Convert ###
-function Base.convert{C<:Colorant,n}(::Type{Array{C,n}},
-                                     img::AxisArray{C,n})
-    copy!(Array{C}(size(img)), img)
+function Base.convert(::Type{Array{C,n}},
+                      img::AxisArray{C,n}) where {C<:Colorant,n}
+    copyto!(Array{C}(undef, size(img)), img)
 end
-function Base.convert{Cdest<:Colorant,n,Csrc<:Colorant}(::Type{Array{Cdest,n}},
-                                                        img::AxisArray{Csrc,n})
-    copy!(Array{ccolor(Cdest, Csrc)}(size(img)), img)
+function Base.convert(::Type{Array{Cdest,n}},
+                      img::AxisArray{Csrc,n}) where {Cdest<:Colorant,n,Csrc<:Colorant}
+    copyto!(Array{ccolor(Cdest, Csrc)}(undef, size(img)), img)
 end
 
 ### StreamingContainer ###
 
-checknames{P}(axnames, ::Type{P}) = checknames(axnames, axisnames(P))
+checknames(axnames, ::Type{P}) where {P} = checknames(axnames, axisnames(P))
 @noinline function checknames(axnames, parentnames::Tuple{Symbol,Vararg{Symbol}})
     mapreduce(x->in(x, parentnames), &, axnames) || throw(DimensionMismatch("names $axnames are not included among $parentnames"))
     nothing
@@ -200,7 +204,7 @@ but jumping between frames might be slow.
 
 It's worth noting that `StreamingContainer` is *not* a subtype of
 `AbstractArray`, but that much of the array interface (`eltype`,
-`ndims`, `indices`, `size`, `getindex`, and `IndexStyle`) is
+`ndims`, `axes`, `size`, `getindex`, and `IndexStyle`) is
 supported. A StreamingContainer `A` can be built from an AxisArray,
 but it may also be constructed from other "parent" objects, even
 non-arrays, as long as they support the same functions. In either
@@ -224,11 +228,11 @@ have dimensionality `ndims(parent)-length(streamingaxes)`.
 
 Optionally, define [`StreamIndexStyle(typeof(parent),typeof(f!))`](@ref).
 """
-immutable StreamingContainer{T,N,streamingaxisnames,P,GetIndex}
+struct StreamingContainer{T,N,streamingaxisnames,P,GetIndex}
     getindex!::GetIndex
     parent::P
 end
-function (::Type{StreamingContainer{T}}){T}(f!::Function, parent, axs::Axis...)
+function StreamingContainer{T}(f!::Function, parent, axs::Axis...) where T
     N = ndims(parent)
     axnames = axisnames(axs...)
     checknames(axnames, typeof(parent))
@@ -236,42 +240,42 @@ function (::Type{StreamingContainer{T}}){T}(f!::Function, parent, axs::Axis...)
 end
 
 Base.parent(S::StreamingContainer) = S.parent
-Base.indices(S::StreamingContainer) = indices(S.parent)
+Base.axes(S::StreamingContainer) = axes(S.parent)
 Base.size(S::StreamingContainer)    = size(S.parent)
-Base.indices(S::StreamingContainer, d) = indices(S.parent, d)
+Base.axes(S::StreamingContainer, d) = axes(S.parent, d)
 Base.size(S::StreamingContainer, d)    = size(S.parent, d)
 
 AxisArrays.axes(S::StreamingContainer) = AxisArrays.axes(parent(S))
 AxisArrays.axisnames(S::StreamingContainer)  = axisnames(AxisArrays.axes(S)...)
 AxisArrays.axisvalues(S::StreamingContainer) = axisvalues(AxisArrays.axes(S)...)
-function AxisArrays.axisdim{name}(S::StreamingContainer, ::Type{Axis{name}})
+function AxisArrays.axisdim(S::StreamingContainer, ::Type{Axis{name}}) where name
     isa(name, Int) && return name <= ndims(S) ? name : error("axis $name greater than array dimensionality $(ndims(S))")
     names = axisnames(S)
-    idx = findfirst(names, name)
-    idx == 0 && error("axis $name not found in array axes $names")
+    idx = findfirst(isequal(name), names)
+    idx isa Nothing && error("axis $name not found in array axes $names")
     idx
 end
 AxisArrays.axisdim(S::StreamingContainer, ax::Axis) = axisdim(S, typeof(ax))
-AxisArrays.axisdim{name,T}(S::StreamingContainer, ::Type{Axis{name,T}}) = axisdim(S, Axis{name})
+AxisArrays.axisdim(S::StreamingContainer, ::Type{Axis{name,T}}) where {name,T} = axisdim(S, Axis{name})
 
 ImageCore.nimages(S::StreamingContainer) = _nimages(timeaxis(S))
-ImageCore.coords_spatial{T,N}(S::StreamingContainer{T,N}) =
-    filter_space_axes(AxisArrays.axes(S), ntuple(identity, Val{N}))
+ImageCore.coords_spatial(S::StreamingContainer{T,N}) where {T,N} =
+    filter_space_axes(AxisArrays.axes(S), ntuple(identity, Val(N)))
 ImageCore.spatialorder(S::StreamingContainer) = filter_space_axes(AxisArrays.axes(S), axisnames(S))
 ImageCore.size_spatial(img::StreamingContainer)    = filter_space_axes(AxisArrays.axes(img), size(img))
-ImageCore.indices_spatial(img::StreamingContainer) = filter_space_axes(AxisArrays.axes(img), indices(img))
+ImageCore.indices_spatial(img::StreamingContainer) = filter_space_axes(AxisArrays.axes(img), axes(img))
 function ImageCore.assert_timedim_last(S::StreamingContainer)
     istimeaxis(AxisArrays.axes(S)[end]) || error("time dimension is not last")
     nothing
 end
 
-Base.eltype{T,N,names,P,GetIndex}(::Type{StreamingContainer{T,N,names,P,GetIndex}}) = T
+Base.eltype(::Type{StreamingContainer{T,N,names,P,GetIndex}}) where {T,N,names,P,GetIndex} = T
 Base.eltype(S::StreamingContainer) = eltype(typeof(S))
-Base.ndims{T,N,names,P,GetIndex}(::Type{StreamingContainer{T,N,names,P,GetIndex}}) = N
+Base.ndims(::Type{StreamingContainer{T,N,names,P,GetIndex}}) where {T,N,names,P,GetIndex} = N
 Base.ndims(S::StreamingContainer) = ndims(typeof(S))
 Base.length(S::StreamingContainer) = prod(size(S))
 
-streamingaxisnames{T,N,names,P,GetIndex}(::Type{StreamingContainer{T,N,names,P,GetIndex}}) =
+streamingaxisnames(::Type{StreamingContainer{T,N,names,P,GetIndex}}) where {T,N,names,P,GetIndex} =
     names
 streamingaxisnames(S::StreamingContainer) = streamingaxisnames(typeof(S))
 
@@ -294,12 +298,12 @@ end
     f!(dest, v)
 end
 
-function isstreamedaxis{name,T,N,saxnames}(ax::Axis{name},
-                                           S::StreamingContainer{T,N,saxnames})
+function isstreamedaxis(ax::Axis{name},
+                        S::StreamingContainer{T,N,saxnames}) where {name,T,N,saxnames}
     in(name, saxnames)
 end
 
-sliceindices(S::StreamingContainer) = filter_notstreamed(indices(S), S)
+sliceindices(S::StreamingContainer) = filter_notstreamed(axes(S), S)
 sliceaxes(S::StreamingContainer) = filter_notstreamed(AxisArrays.axes(S), S)
 getslicedindices(S::StreamingContainer, I) = filter_streamed(map((ax, i) -> ax(i), AxisArrays.axes(S), I), S)
 
@@ -308,24 +312,24 @@ filter_notstreamed(inds, S) = _filter_notstreamed(inds, AxisArrays.axes(S), S)
 filter_streamed(inds::Tuple{Axis,Vararg{Axis}}, S)    = _filter_streamed(inds, inds, S)
 filter_notstreamed(inds::Tuple{Axis,Vararg{Axis}}, S) = _filter_notstreamed(inds, inds, S)
 
-@generated function _filter_streamed{N}(a, axs::NTuple{N,Axis}, S::StreamingContainer)
-    inds = findin(axisnames(axs.parameters...), streamingaxisnames(S))
+@generated function _filter_streamed(a, axs::NTuple{N,Axis}, S::StreamingContainer) where N
+    inds = findall(x->x in streamingaxisnames(S), axisnames(axs.parameters...))
     Expr(:tuple, Expr[:(a[$i]) for i in inds]...)
 end
-@generated function _filter_notstreamed{N}(a, axs::NTuple{N,Axis}, S::StreamingContainer)
-    inds = findin(axisnames(axs.parameters...), streamingaxisnames(S))
+@generated function _filter_notstreamed(a, axs::NTuple{N,Axis}, S::StreamingContainer) where N
+    inds = findall(x->x in streamingaxisnames(S), axisnames(axs.parameters...))
     inds = setdiff(1:N, inds)
     Expr(:tuple, Expr[:(a[$i]) for i in inds]...)
 end
 
-@inline function Base.getindex{T,N}(S::StreamingContainer{T,N}, inds::Vararg{Union{Colon,Base.ViewIndex},N})
+@inline function Base.getindex(S::StreamingContainer{T,N}, inds::Vararg{Union{Colon,Base.ViewIndex},N}) where {T,N}
     tmp = similar(Array{T}, sliceindices(S))
     getindex!(tmp, S, getslicedindices(S, inds)...)
     tmp[filter_notstreamed(inds, S)...]
 end
 @inline function Base.getindex(S::StreamingContainer, ind1::Axis, inds_rest::Axis...)
     axs = sliceaxes(S)
-    tmp = AxisArray(Array{eltype(S)}(map(length, axs)), axs)
+    tmp = AxisArray(Array{eltype(S)}(undef, map(length, axs)), axs)
     inds = (ind1, inds_rest...)
     getindex!(tmp, S, _filter_streamed(inds, inds, S)...)
     getindex_rest(tmp, _filter_notstreamed(inds, inds, S))
@@ -346,45 +350,45 @@ This should be specialized for the type rather than the instance. For
 a StreamingContainer `S`, you can define this trait via
 
 ```julia
-(::Type{StreamIndexStyle})(::Type{P}, ::typeof(f!)) = IndexIncremental()
+StreamIndexStyle(::Type{P}, ::typeof(f!)) = IndexIncremental()
 ```
 
 where `P = typeof(parent(S))`.
 """
-@compat abstract type StreamIndexStyle end
-immutable IndexAny <: StreamIndexStyle end
-immutable IndexIncremental <: StreamIndexStyle end
+abstract type StreamIndexStyle end
+struct IndexAny <: StreamIndexStyle end
+struct IndexIncremental <: StreamIndexStyle end
 
-(::Type{StreamIndexStyle}){A<:AbstractArray}(::Type{A}) = IndexAny()
-(::Type{StreamIndexStyle})(A::AbstractArray) = StreamIndexStyle(typeof(A))
+StreamIndexStyle(::Type{A}) where {A<:AbstractArray} = IndexAny()
+StreamIndexStyle(A::AbstractArray) = StreamIndexStyle(typeof(A))
 
-(::Type{StreamIndexStyle}){T,N,axnames,P,GetIndex}(::Type{StreamingContainer{T,N,axnames,P,GetIndex}}) = StreamIndexStyle(P, GetIndex)
-(::Type{StreamIndexStyle}){P,GetIndex}(::Type{P},::Type{GetIndex}) = IndexAny()
+StreamIndexStyle(::Type{StreamingContainer{T,N,axnames,P,GetIndex}}) where {T,N,axnames,P,GetIndex} = StreamIndexStyle(P, GetIndex)
+StreamIndexStyle(::Type{P},::Type{GetIndex}) where {P,GetIndex} = IndexAny()
 
-(::Type{StreamIndexStyle})(S::StreamingContainer) = StreamIndexStyle(typeof(S))
+StreamIndexStyle(S::StreamingContainer) = StreamIndexStyle(typeof(S))
 
 ### Low level utilities ###
 
-filter_space_axes{N}(axes::NTuple{N,Axis}, items::NTuple{N,Any}) =
+filter_space_axes(axes::NTuple{N,Axis}, items::NTuple{N,Any}) where {N} =
     _filter_space_axes(axes, items)
-@inline @traitfn _filter_space_axes{Ax<:Axis;  TimeAxis{Ax}}(axes::Tuple{Ax,Vararg{Any}}, items) =
+@inline @traitfn _filter_space_axes(axes::Tuple{Ax,Vararg{Any}}, items) where {Ax<:Axis;  TimeAxis{Ax}} =
     _filter_space_axes(tail(axes), tail(items))
-@inline @traitfn _filter_space_axes{Ax<:Axis; !TimeAxis{Ax}}(axes::Tuple{Ax,Vararg{Any}}, items) =
+@inline @traitfn _filter_space_axes(axes::Tuple{Ax,Vararg{Any}}, items) where {Ax<:Axis; !TimeAxis{Ax}} =
     (items[1], _filter_space_axes(tail(axes), tail(items))...)
 _filter_space_axes(::Tuple{}, ::Tuple{}) = ()
-@inline _filter_space_axes{Ax<:Axis{:color}}(axes::Tuple{Ax,Vararg{Any}}, items) =
+@inline _filter_space_axes(axes::Tuple{Ax,Vararg{Any}}, items) where {Ax<:Axis{:color}} =
     _filter_space_axes(tail(axes), tail(items))
 
-filter_time_axis{N}(axes::NTuple{N,Axis}, items::NTuple{N}) =
+filter_time_axis(axes::NTuple{N,Axis}, items::NTuple{N}) where {N} =
     _filter_time_axis(axes, items)
-@inline @traitfn _filter_time_axis{Ax<:Axis; !TimeAxis{Ax}}(axes::Tuple{Ax,Vararg{Any}}, items) =
+@inline @traitfn _filter_time_axis(axes::Tuple{Ax,Vararg{Any}}, items) where {Ax<:Axis; !TimeAxis{Ax}} =
     _filter_time_axis(tail(axes), tail(items))
-@inline @traitfn _filter_time_axis{Ax<:Axis;  TimeAxis{Ax}}(axes::Tuple{Ax,Vararg{Any}}, items) =
+@inline @traitfn _filter_time_axis(axes::Tuple{Ax,Vararg{Any}}, items) where {Ax<:Axis;  TimeAxis{Ax}} =
     (items[1], _filter_time_axis(tail(axes), tail(items))...)
 _filter_time_axis(::Tuple{}, ::Tuple{}) = ()
 
 # summary: print color types & fixed-point types compactly
-function AxisArrays._summary{T<:Union{Fractional,Colorant},N}(io, A::AxisArray{T,N})
+function AxisArrays._summary(io, A::AxisArray{T,N}) where {T<:Union{Fractional,Colorant},N}
     print(io, "$N-dimensional AxisArray{")
     if T<:Colorant
         ColorTypes.colorant_string_with_eltype(io, T)
