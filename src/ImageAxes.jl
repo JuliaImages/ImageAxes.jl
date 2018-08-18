@@ -2,7 +2,6 @@ module ImageAxes
 
 using Base: @pure, tail
 using Reexport, Colors, SimpleTraits, MappedArrays
-using Compat
 
 # maybe return to "@reexport AxisArrays" if AxisArrays is fixed
 
