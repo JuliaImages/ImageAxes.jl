@@ -15,16 +15,16 @@ script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'import Pkg; Pkg.add("Unitful")'   # we need this for the docs as well as the tests
   - julia -e 'import Pkg; Pkg.clone(pwd()); Pkg.build("ImageAxes"); Pkg.test("ImageAxes"; coverage=true)'
-# FIXME: enable deploy for merges into master
-# jobs:
-#   include:
-#     - stage: deploy
-#       julia: 0.7
-#       os: linux
-#       script:
-#         - julia -e 'import Pkg; Pkg.clone(pwd()); Pkg.build("ImageAxes")'
-#         - julia -e 'import Pkg; Pkg.add("Documenter")'
-#         - julia -e 'import ImageAxes; include("docs/make.jl")'
+
+jobs:
+  include:
+    - stage: deploy
+      julia: 0.7
+      os: linux
+      script:
+        - julia -e 'import Pkg; Pkg.clone(pwd()); Pkg.build("ImageAxes")'
+        - julia -e 'import Pkg; Pkg.add("Documenter")'
+        - julia -e 'import ImageAxes; include("docs/make.jl")'
 
 after_success:
   # push coverage results to Codecov
