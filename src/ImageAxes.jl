@@ -356,7 +356,19 @@ StreamIndexStyle(::Type{P}, ::typeof(f!)) = IndexIncremental()
 where `P = typeof(parent(S))`.
 """
 abstract type StreamIndexStyle end
+
+"""
+    IndexAny()
+
+Indicates that an axis supports full random-access indexing.
+"""
 struct IndexAny <: StreamIndexStyle end
+"""
+    IndexIncremental()
+
+Indicates that an axis supports only incremental indexing, i.e., from `i` to `i+1`.
+This is commonly used for the temporal axis with media streams.
+"""
 struct IndexIncremental <: StreamIndexStyle end
 
 StreamIndexStyle(::Type{A}) where {A<:AbstractArray} = IndexAny()
