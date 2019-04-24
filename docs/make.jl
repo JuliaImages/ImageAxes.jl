@@ -1,14 +1,11 @@
-using Documenter, ImageAxes
+using Documenter, ImageAxes, SimpleTraits
 
 makedocs(modules  = [ImageAxes],
-         format   = Documenter.Formats.HTML,
+         format   = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
          sitename = "ImageAxes",
-         pages    = ["index.md"])
+         linkcheck = !("skiplinks" in ARGS),
+         pages    = ["index.md", "reference.md"])
 
 deploydocs(
            repo   = "github.com/JuliaImages/ImageAxes.jl.git",
-           julia  = "0.5",
-           target = "build",
-           deps   = nothing,
-           make   = nothing
            )

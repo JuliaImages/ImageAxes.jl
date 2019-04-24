@@ -10,7 +10,7 @@ axes and one temporal axis; this fact may be relevant for how one
 performs image processing.
 
 This package combines features from
-[AxisArrays](https://github.com/mbauman/AxisArrays.jl) and
+[AxisArrays](https://github.com/JuliaArrays/AxisArrays.jl) and
 [SimpleTraits](https://github.com/mauro3/SimpleTraits.jl) to provide a
 convenient representation and programming paradigm for dealing with
 such images.
@@ -32,7 +32,7 @@ using ImageAxes
 img = AxisArray(reshape(1:192, (8,8,3)), :x, :y, :z)
 ```
 
-As described in more detail in the [AxisArrays documentation](https://github.com/mbauman/AxisArrays.jl), you can now take slices like this:
+As described in more detail in the [AxisArrays documentation](https://github.com/JuliaArrays/AxisArrays.jl), you can now take slices like this:
 
 ```@example 1
 sl = img[Axis{:z}(2)]
@@ -82,8 +82,8 @@ You can also specialize methods like this:
 
 ```@example
 using ImageAxes, SimpleTraits
-@traitfn nimages{AA<:AxisArray;  HasTimeAxis{AA}}(img::AA) = length(timeaxis(img))
-@traitfn nimages{AA<:AxisArray; !HasTimeAxis{AA}}(img::AA) = 1
+@traitfn nimages(img::AA) where {AA<:AxisArray;  HasTimeAxis{AA}} = length(timeaxis(img))
+@traitfn nimages(img::AA) where {AA<:AxisArray; !HasTimeAxis{AA}} = 1
 ```
 
 where the pre-defined `HasTimeAxis` trait will restrict that method to
@@ -121,3 +121,10 @@ Note this declaration affects all arrays throughout your entire
 session.  Moreover, it should be made before calling any functions on
 array-types that possess such axes; a convenient place to do this is
 right after you say `using ImageAxes` in your top-level script.
+
+## StreamingContainer
+
+ImageAxes implements a non-AbstractArray type [`StreamingContainer`](@ref)
+for handling streaming media or computationally-generated images.
+It provides much of the interface of AbstractArrays without the implicit promise
+of random access or efficient indexing for all axes.

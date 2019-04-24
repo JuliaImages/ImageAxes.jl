@@ -21,7 +21,7 @@ export # types
     StreamIndexStyle,
     # functions
     colordim,
-    data,
+    arraydata,
     getindex!,
     istimeaxis,
     timeaxis,
@@ -163,7 +163,8 @@ ImageCore.spatialorder(img::AxisArray) = filter_space_axes(AxisArrays.axes(img),
 ImageCore.size_spatial(img::AxisArray)    = filter_space_axes(AxisArrays.axes(img), size(img))
 ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(AxisArrays.axes(img), axes(img))
 
-data(img::AxisArray) = img.data
+arraydata(img::AxisArray) = img.data
+@deprecate data arraydata
 
 ### Utilities for writing "simple algorithms" safely ###
 
@@ -355,7 +356,19 @@ StreamIndexStyle(::Type{P}, ::typeof(f!)) = IndexIncremental()
 where `P = typeof(parent(S))`.
 """
 abstract type StreamIndexStyle end
+
+"""
+    IndexAny()
+
+Indicates that an axis supports full random-access indexing.
+"""
 struct IndexAny <: StreamIndexStyle end
+"""
+    IndexIncremental()
+
+Indicates that an axis supports only incremental indexing, i.e., from `i` to `i+1`.
+This is commonly used for the temporal axis with media streams.
+"""
 struct IndexIncremental <: StreamIndexStyle end
 
 StreamIndexStyle(::Type{A}) where {A<:AbstractArray} = IndexAny()
