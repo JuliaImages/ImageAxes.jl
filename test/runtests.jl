@@ -1,5 +1,4 @@
 using Colors, FixedPointNumbers, MappedArrays, Test, ImageCore
-using Compat
 import AxisArrays
 
 ambs = detect_ambiguities(ImageCore,AxisArrays,Base,Core)
