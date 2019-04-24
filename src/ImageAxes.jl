@@ -21,7 +21,7 @@ export # types
     StreamIndexStyle,
     # functions
     colordim,
-    data,
+    arraydata,
     getindex!,
     istimeaxis,
     timeaxis,
@@ -163,7 +163,8 @@ ImageCore.spatialorder(img::AxisArray) = filter_space_axes(AxisArrays.axes(img),
 ImageCore.size_spatial(img::AxisArray)    = filter_space_axes(AxisArrays.axes(img), size(img))
 ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(AxisArrays.axes(img), axes(img))
 
-data(img::AxisArray) = img.data
+arraydata(img::AxisArray) = img.data
+@deprecate data arraydata
 
 ### Utilities for writing "simple algorithms" safely ###
 
