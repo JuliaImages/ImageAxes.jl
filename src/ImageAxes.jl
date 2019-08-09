@@ -202,6 +202,35 @@ be expensive or subject to restrictions. A canonical example would be
 an AVI stream, where addressing pixels within the same frame is fast
 but jumping between frames might be slow.
 
+Here's a simple example of dividing by the mean of each slice of an image before returning values. 
+
+    A = AxisArrays.AxisArray(reshape(1:36, 3, 3, 4))
+
+    function f!(buffer, slice)
+        meanslice = mean(slice)
+        buffer .= slice./meanslice
+    end
+
+    B = StreamingContainer{Float64}(f!, A, AxisArrays.axes(A)[3])
+
+    julia> A[:,:,1]
+    3×3 AxisArray{Int64,2,Array{Int64,2},Tuple{Axis{:row,Base.OneTo{Int64}},Axis{:col,Base.OneTo{Int64}}}}:
+     1  4  7
+     2  5  8
+     3  6  9
+
+    julia> B[:,:,1]
+    3×3 Array{Float64,2}:
+     0.2  0.8  1.4
+     0.4  1.0  1.6
+     0.6  1.2  1.8
+
+The user-provided `f!` function should take arguments:
+
+    f!(buffer, slice)
+
+Where `buffer` will be an empty array that can hold a slice of your series, and `slice` will hold the current input slice. 
+
 It's worth noting that `StreamingContainer` is *not* a subtype of
 `AbstractArray`, but that much of the array interface (`eltype`,
 `ndims`, `axes`, `size`, `getindex`, and `IndexStyle`) is
