@@ -13,6 +13,7 @@ SimpleTraits = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 
 [compat]
 AxisArrays = "≥ 0.3.0"
+Colors = "0.9"
 FixedPointNumbers = "≥ 0.3.0"
 ImageCore = "≥ 0.2.0"
 julia = "≥ 1.0.0"
