@@ -15,6 +15,7 @@ SimpleTraits = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 AxisArrays = "≥ 0.3.0"
 FixedPointNumbers = "≥ 0.3.0"
 ImageCore = "≥ 0.2.0"
+Reexport = "0.2"
 julia = "≥ 1.0.0"
 
 [extras]
