@@ -13,7 +13,7 @@ SimpleTraits = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 
 [compat]
 AxisArrays = "0.3"
-Colors = "0.9"
+Colors = "0.9, 0.11"
 FixedPointNumbers = "0.5, 0.6"
 ImageCore = "0.8"
 MappedArrays = "0.2"
