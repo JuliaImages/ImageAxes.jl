@@ -1,7 +1,7 @@
 module ImageAxes
 
 using Base: @pure, tail
-using Reexport, Colors, SimpleTraits, MappedArrays
+using Reexport, SimpleTraits, MappedArrays
 
 # maybe return to "@reexport AxisArrays" if AxisArrays is fixed
 
@@ -202,7 +202,7 @@ be expensive or subject to restrictions. A canonical example would be
 an AVI stream, where addressing pixels within the same frame is fast
 but jumping between frames might be slow.
 
-Here's a simple example of dividing by the mean of each slice of an image before returning values. 
+Here's a simple example of dividing by the mean of each slice of an image before returning values.
 
     A = AxisArrays.AxisArray(reshape(1:36, 3, 3, 4))
 
@@ -229,7 +229,7 @@ The user-provided `f!` function should take arguments:
 
     f!(buffer, slice)
 
-Where `buffer` will be an empty array that can hold a slice of your series, and `slice` will hold the current input slice. 
+Where `buffer` will be an empty array that can hold a slice of your series, and `slice` will hold the current input slice.
 
 It's worth noting that `StreamingContainer` is *not* a subtype of
 `AbstractArray`, but that much of the array interface (`eltype`,
