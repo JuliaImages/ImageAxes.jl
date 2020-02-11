@@ -1,14 +1,10 @@
+# Until https://github.com/julia-actions/julia-uploadcodecov/issues/1 get fixed
+# submit coverage report via travis
 language: julia
 os:
   - linux
-  - osx
 julia:
   - 1.0
-  - 1.1
-  - nightly
-matrix:
-  allow_failures:
-    - julia: nightly
 notifications:
   email: false
 
@@ -23,4 +19,4 @@ jobs:
 
 after_success:
   # push coverage results to Codecov
-  - julia -e 'import Pkg; cd(Pkg.dir("ImageAxes")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
