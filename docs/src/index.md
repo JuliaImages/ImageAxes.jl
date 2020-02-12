@@ -36,6 +36,7 @@ As described in more detail in the [AxisArrays documentation](https://github.com
 
 ```@example 1
 sl = img[Axis{:z}(2)]
+sl = img[z=2]    # with AxisArrays 0.4.2 or higher
 ```
 
 You can also give units to the axes:
