@@ -17,6 +17,12 @@ using SimpleTraits, Unitful
 @traitfn has_time_axis(::AA) where {AA<:AxisArray;  HasTimeAxis{AA}} = true
 @traitfn has_time_axis(::AA) where {AA<:AxisArray; !HasTimeAxis{AA}} = false
 
+function typestring(::Type{T}) where T   # from https://github.com/JuliaImages/ImageCore.jl/pull/133
+    buf = IOBuffer()
+    show(buf, T)
+    String(take!(buf))
+end
+
 @testset "no units, no time" begin
     A = AxisArray(reshape(1:12, 3, 4), Axis{:x}(1:3), Axis{:y}(1:4))
     @test @inferred(timeaxis(A)) === nothing
@@ -91,7 +97,7 @@ end
 
 @testset "grayscale" begin
     A = AxisArray(rand(Gray{N0f8}, 4, 5), :y, :x)
-    @test summary(A) == "2-dimensional AxisArray{Gray{N0f8},2,...} with axes:\n    :y, Base.OneTo(4)\n    :x, Base.OneTo(5)\nAnd data, a 4×5 Array{Gray{N0f8},2} with eltype Gray{Normed{UInt8,8}}"
+    @test summary(A) == "2-dimensional AxisArray{Gray{N0f8},2,...} with axes:\n    :y, Base.OneTo(4)\n    :x, Base.OneTo(5)\nAnd data, a 4×5 Array{Gray{N0f8},2} with eltype Gray{$(typestring(N0f8))}"
     cv = channelview(A)
     @test AxisArrays.axes(cv) == (Axis{:y}(1:4), Axis{:x}(1:5))
     @test spatialorder(cv) == (:y, :x)
