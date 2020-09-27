@@ -110,14 +110,14 @@ end
     @test AxisArrays.axes(cv) == (Axis{:color}(1:3), Axis{:y}(1:4), Axis{:x}(1:5))
     @test spatialorder(cv) == (:y, :x)
     @test colordim(cv) == 1
-    p = permuteddimsview(cv, (2,3,1))
+    p = PermutedDimsArray(cv, (2,3,1))
     @test AxisArrays.axes(p) == (Axis{:y}(1:4), Axis{:x}(1:5), Axis{:color}(1:3))
     @test colordim(p) == 3
 end
 
 @testset "nested" begin
     A = AxisArray(rand(RGB{N0f8}, 4, 5), (:y, :x), (2, 1))
-    P = permuteddimsview(A, (2, 1))
+    P = PermutedDimsArray(A, (2, 1))
     @test @inferred(pixelspacing(P)) == (1, 2)
     M = mappedarray(identity, A)
     @test @inferred(pixelspacing(M)) == (2, 1)
@@ -125,7 +125,7 @@ end
     μm = u"μm" # global const
     tax = Axis{:time}(range(0.0s, step=0.1s, length=11))
     A = AxisArray(rand(N0f16, 4, 5, 11), (:y, :x, :time), (2μm, 1μm, 0.1s))
-    P = permuteddimsview(A, (3, 1, 2))
+    P = PermutedDimsArray(A, (3, 1, 2))
     M = mappedarray(identity, A)
     @test @inferred(pixelspacing(P)) == @inferred(pixelspacing(M)) == (2μm, 1μm)
     @test @inferred(timeaxis(P)) == @inferred(timeaxis(M)) == tax
@@ -137,7 +137,7 @@ end
     @test_throws ErrorException assert_timedim_last(P)
     assert_timedim_last(M)
     A = AxisArray(rand(N0f16, 11, 5, 4), (:time, :x, :y), (0.1s, 1μm, 2μm))
-    P = permuteddimsview(A, (3, 2, 1))
+    P = PermutedDimsArray(A, (3, 2, 1))
     M = mappedarray(identity, A)
     @test @inferred(pixelspacing(P)) == (2μm, 1μm)
     @test @inferred(pixelspacing(M)) == (1μm, 2μm)
