@@ -111,7 +111,7 @@ Base.@pure function SimpleTraits.trait(t::Type{HasTimeAxis{AA}}) where AA<:AxisA
 end
 
 # Specializations to preserve the AxisArray wrapper
-function ImageCore.PermutedDimsArray(A::AxisArray, perm)
+function Base.PermutedDimsArray(A::AxisArray, perm)
     axs = AxisArrays.axes(A)
     AxisArray(PermutedDimsArray(A.data, perm), axs[[perm...]]...)
 end
