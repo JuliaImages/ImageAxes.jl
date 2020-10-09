@@ -12,7 +12,7 @@ SimpleTraits = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 [compat]
 AxisArrays = "0.3, 0.4"
 ImageCore = "0.8.1"
-MappedArrays = "0.2"
+MappedArrays = "0.2, 0.3"
 Reexport = "0.2"
 SimpleTraits = "0.8, 0.9"
 julia = "1"
