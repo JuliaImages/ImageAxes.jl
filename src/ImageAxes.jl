@@ -1,7 +1,7 @@
 module ImageAxes
 
 using Base: @pure, tail
-using Reexport, SimpleTraits, MappedArrays
+using Reexport, SimpleTraits
 
 # maybe return to "@reexport AxisArrays" if AxisArrays is fixed
 
@@ -10,6 +10,7 @@ using AxisArrays: AxisArray, Axis, axisnames, axisvalues, axisdim, atindex, atva
 export AxisArray, Axis, axisnames, axisvalues, axisdim, atindex, atvalue, collapse
 
 @reexport using ImageCore
+using ImageCore.MappedArrays
 
 
 export # types
