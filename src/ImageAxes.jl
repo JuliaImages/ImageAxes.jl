@@ -11,6 +11,7 @@ export AxisArray, Axis, axisnames, axisvalues, axisdim, atindex, atvalue, collap
 
 @reexport using ImageCore
 using ImageCore.MappedArrays
+using ImageCore.OffsetArrays
 
 
 export # types
@@ -439,5 +440,8 @@ function AxisArrays._summary(io, A::AxisArray{T,N}) where {T<:Union{Fractional,C
     end
     println(io, ",$N,...} with axes:")
 end
+
+# glue codes
+include("offsetarrays.jl")
 
 end # module
