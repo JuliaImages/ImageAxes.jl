@@ -2,6 +2,8 @@ using Test, ImageCore
 using ImageCore.MappedArrays
 using ImageCore.OffsetArrays
 import AxisArrays
+using ImageBase: restrict
+using ColorVectorSpace
 
 ambs = detect_ambiguities(ImageCore,AxisArrays,Base,Core)
 using ImageAxes
@@ -233,8 +235,8 @@ end
     @test ImageAxes.filter_streamed((1,2), S) == (2,)
 end
 
-@testset "OffsetArrays" begin
-    include("offsetarrays.jl")
-end
+# glue codes
+include("offsetarrays.jl")
+include("restrict.jl")
 
 nothing
