@@ -1,20 +1,29 @@
-using Test, ImageCore
+using ImageCore
 using ImageCore.MappedArrays
 using ImageCore.OffsetArrays
 import AxisArrays
 using ImageBase: restrict
-using ColorVectorSpace
-
-ambs = detect_ambiguities(ImageCore,AxisArrays,Base,Core)
 using ImageAxes
-ambs = setdiff(detect_ambiguities(ImageAxes,ImageCore,AxisArrays,Base,Core), ambs)
-if !isempty(ambs)
-    println("Ambiguities:")
-    for a in ambs
-        println(a)
+using Test, Aqua, Documenter # for meta quality checks
+
+@testset "Project meta quality checks" begin
+    if VERSION >= v"1.2"
+        # Not checking compat section for test-only dependencies
+        ambiguity_exclude_list = [
+            # https://github.com/JuliaDiff/ChainRulesCore.jl/pull/367#issuecomment-869071000
+            Base.:(==),
+        ]
+        Aqua.test_ambiguities([ImageAxes, Base, Core], exclude=ambiguity_exclude_list)
+        Aqua.test_all(ImageAxes;
+                    ambiguities=false,
+                    project_extras=true,
+                    deps_compat=true,
+                    stale_deps=true,
+                    project_toml_formatting=true
+        )
+        DocMeta.setdocmeta!(ImageAxes, :DocTestSetup, :(using ImageAxes); recursive=true)
     end
 end
-@test isempty(ambs)
 
 using SimpleTraits, Unitful
 
