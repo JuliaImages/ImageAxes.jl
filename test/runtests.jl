@@ -1,6 +1,7 @@
 using Test, ImageCore
 using ImageCore.MappedArrays
 import AxisArrays
+using OffsetArrays
 
 ambs = detect_ambiguities(ImageCore,AxisArrays,Base,Core)
 using ImageAxes
@@ -230,6 +231,10 @@ end
     # internal
     @test ImageAxes.streamingaxisnames(S) == (:time,)
     @test ImageAxes.filter_streamed((1,2), S) == (2,)
+end
+
+@testset "OffsetArrays" begin
+    include("offsetarrays.jl")
 end
 
 nothing
