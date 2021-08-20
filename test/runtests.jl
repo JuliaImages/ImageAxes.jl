@@ -1,7 +1,7 @@
 using Test, ImageCore
 using ImageCore.MappedArrays
+using ImageCore.OffsetArrays
 import AxisArrays
-using OffsetArrays
 
 ambs = detect_ambiguities(ImageCore,AxisArrays,Base,Core)
 using ImageAxes

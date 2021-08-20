@@ -11,7 +11,7 @@ export AxisArray, Axis, axisnames, axisvalues, axisdim, atindex, atvalue, collap
 
 @reexport using ImageCore
 using ImageCore.MappedArrays
-using OffsetArrays
+using ImageCore.OffsetArrays
 
 
 export # types
