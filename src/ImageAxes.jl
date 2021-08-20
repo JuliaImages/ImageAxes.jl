@@ -167,7 +167,6 @@ ImageCore.size_spatial(img::AxisArray)    = filter_space_axes(AxisArrays.axes(im
 ImageCore.indices_spatial(img::AxisArray) = filter_space_axes(AxisArrays.axes(img), axes(img))
 
 arraydata(img::AxisArray) = img.data
-@deprecate data arraydata
 
 ### Utilities for writing "simple algorithms" safely ###
 
@@ -441,6 +440,8 @@ function AxisArrays._summary(io, A::AxisArray{T,N}) where {T<:Union{Fractional,C
     end
     println(io, ",$N,...} with axes:")
 end
+
+include("deprecated.jl")
 
 # glue codes
 include("offsetarrays.jl")
