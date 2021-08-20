@@ -12,6 +12,7 @@ export AxisArray, Axis, axisnames, axisvalues, axisdim, atindex, atvalue, collap
 @reexport using ImageCore
 using ImageCore.MappedArrays
 using ImageCore.OffsetArrays
+import ImageBase: restrict
 
 
 export # types
@@ -443,5 +444,6 @@ end
 
 # glue codes
 include("offsetarrays.jl")
+include("restrict.jl")
 
 end # module
