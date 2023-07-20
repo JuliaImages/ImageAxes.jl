@@ -19,7 +19,8 @@ using Test, Aqua, Documenter # for meta quality checks
                     project_extras=true,
                     deps_compat=true,
                     stale_deps=true,
-                    project_toml_formatting=true
+                    project_toml_formatting=true,
+                    piracy=false,  # this is a glue package for ImageCore with AxisArrays (TODO: make it an ImageCore extension)
         )
         DocMeta.setdocmeta!(ImageAxes, :DocTestSetup, :(using ImageAxes); recursive=true)
     end
