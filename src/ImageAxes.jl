@@ -30,6 +30,10 @@ export # types
     timeaxis,
     timedim
 
+ImageCore.HasDimNames(::Type{A}) where {A<:AxisArray} = HasDimNames{true}()
+ImageCore.namedaxes(a::AxisArray) = NamedTuple{axisnames(a)}(axisvalues(a))
+Base.names(a::AxisArray) = axisnames(a)
+
 """
     TimeAxis{Ax}
 

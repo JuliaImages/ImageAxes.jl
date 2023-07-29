@@ -165,6 +165,8 @@ end
     @test @inferred(size_spatial(M)) == (5, 4)
     assert_timedim_last(P)
     @test_throws ErrorException assert_timedim_last(M)
+    @test @inferred(HasDimNames(A)) == HasDimNames{true}()
+    @test @inferred(namedaxes(A)) == NamedTuple{axisnames(A)}(axisvalues(A))
 end
 
 # Possibly-ambiguous functions
