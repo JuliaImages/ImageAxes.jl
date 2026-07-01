@@ -7,22 +7,15 @@ using ImageAxes
 using Test, Aqua, Documenter # for meta quality checks
 
 @testset "Project meta quality checks" begin
-    if VERSION >= v"1.2"
-        # Not checking compat section for test-only dependencies
-        ambiguity_exclude_list = [
-            # https://github.com/JuliaDiff/ChainRulesCore.jl/pull/367#issuecomment-869071000
-            Base.:(==),
-        ]
-        Aqua.test_ambiguities([ImageAxes, Base, Core], exclude=ambiguity_exclude_list)
-        Aqua.test_all(ImageAxes;
-                    ambiguities=false,
-                    project_extras=true,
-                    deps_compat=true,
-                    stale_deps=true,
-                    piracies=false,  # this is a glue package for ImageCore with AxisArrays (TODO: make it an ImageCore extension)
-        )
-        DocMeta.setdocmeta!(ImageAxes, :DocTestSetup, :(using ImageAxes); recursive=true)
-    end
+    Aqua.test_ambiguities(ImageAxes)
+    Aqua.test_all(ImageAxes;
+                ambiguities=false,
+                project_extras=true,
+                deps_compat=true,
+                stale_deps=true,
+                piracies=false,  # this is a glue package for ImageCore with AxisArrays (TODO: make it an ImageCore extension)
+    )
+    DocMeta.setdocmeta!(ImageAxes, :DocTestSetup, :(using ImageAxes); recursive=true)
 end
 
 using SimpleTraits, Unitful
